@@ -87,6 +87,20 @@ scrape_radiondekeluka_article <- function(url){
 # Map across to scrape articles
 articles_radiondekeluka <- map_df(all_links_radiondekeluka$link, scrape_radiondekeluka_article)
 
+# Save Radio Ndeke Luka
+#write_csv(articles_radiondekeluka, "data-raw/articles_radiondekeluka.csv")
 
-# 
+
+# Scrape Lengo Sango (backed by Russia) ----
+
+
+
+
+
+
+
+
+
+
+
 
