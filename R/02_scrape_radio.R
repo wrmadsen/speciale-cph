@@ -22,7 +22,7 @@ get_links_from_radiondekeluka <- function(url){
 }
 
 # Run for loop
-n <- 50
+n <- 10
 data_list = list()
 data_list = vector("list", length = n)
 
@@ -66,7 +66,7 @@ scrape_radiondekeluka_article <- function(url){
     html_elements(".pull-left") %>%
     html_text()
   
-  text <- article_html %>%
+  body <- article_html %>%
     html_elements("p") %>%
     html_text() %>%
     paste(collapse = "")
@@ -79,16 +79,16 @@ scrape_radiondekeluka_article <- function(url){
   tibble(url = url,
          title = title,
          date = date,
-         text = text)
+         body = body)
   
 }
 
 
 # Map across to scrape articles
-articles_radiondekeluka <- map_df(all_links_radiondekeluka$link, scrape_radiondekeluka_article)
+#articles_radiondekeluka <- map_df(all_links_radiondekeluka$link, scrape_radiondekeluka_article)
 
 # Save Radio Ndeke Luka
-#write_csv(articles_radiondekeluka, "data-raw/articles_radiondekeluka.csv")
+#write_csv(articles_radiondekeluka, "data-raw/Radio/articles_radiondekeluka.csv")
 
 
 # Scrape Lengo Sango (backed by Russia) ----
