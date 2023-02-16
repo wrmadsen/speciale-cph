@@ -2,7 +2,12 @@
 
 # Create data to get Tweets by keywords -----
 # Keysword to scrape
-key_words_to_scrape <- c("poutine touadera")
+key_words_to_scrape <- c("poutine touadera",
+                         "centrafrique poutine",
+                         "centrafrique wagner",
+                         "wagner touadera")
+
+key_words_to_scrape <- paste0("lang:fr ", key_words_to_scrape)
 
 # Create tibbl
 get_tweets_keywords <- key_words_to_scrape %>%
