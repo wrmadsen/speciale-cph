@@ -1,5 +1,6 @@
 import snscrape.modules.twitter as sntwitter
 import pandas as pd
+import time
 
 # Load data used to scrape Tweets
 get_data = pd.read_csv("data-raw/Twitter/get_tweets_keywords.csv")
