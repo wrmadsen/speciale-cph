@@ -1,6 +1,7 @@
 # Create tokens from Twitter master dataset
 
-## Remove patterns and URLs ----
+# Create functions ----
+## Remove patterns and URLs
 remove_patterns_in_post <- function(input){
   
   # Special characters
@@ -34,14 +35,14 @@ remove_patterns_in_post <- function(input){
   
 }
 
-## Remove accents from strings ----
+## Remove accents from strings
 remove_accents <- function(input){
   
   stri_trans_general(str = input, id = "Latin-ASCII")
   
 }
 
-## Strings to recode and avoid stemming ----
+# Strings to recode and avoid stemming ----
 # Only those with more than one word included here
 # Others 1-word tokens, which should be joined with two-words
 # can be fixed by recoding after tokenization
@@ -51,7 +52,7 @@ names <- c("don kibarou",
            # politicians
            "modibo keita",
            "vladimir poutine",
-           #"poutine",
+           #"poutine", # uncomment to test (comment out later)
            #"vladimir",
            "joe biden",
            #"joe",
@@ -167,11 +168,13 @@ phrases <- c(#"was live"
 # Create named vector
 strings_to_recode <- c(names, countries, groups, phrases) %>%
   tibble(old = .) %>%
-  mutate(new = gsub(" ", "_", old)) %>%
+  mutate(new = gsub(" ", "_", old),
+         new = paste0(new, "_")
+         ) %>%
   # to named vector
   deframe()
 
-## Recode function certain strings before tokenizing ----
+## Recode function certain strings before tokenizing
 # Ensures that these strings are kept together
 # Includes names (first and last name for example), organisations,
 # countries, etc.
@@ -179,21 +182,23 @@ strings_to_recode <- c(names, countries, groups, phrases) %>%
 recode_strings_before_tokenizing <- function(strings_to_recode, input){
   
   # Replace
+  # Remove double "__"
   input %>%
-    mutate(text = str_replace_all(text, strings_to_recode))
+    mutate(text = str_replace_all(text, strings_to_recode),
+           text = gsub("__", "_", text))
   
 }
 
-## Find and remove repeated substrings ----
-# find_and_remove_repeated_substring <- function(input){
-#   
-#   #input <- "assemblee generale de yerewoloassemblee generale de yerewolo"
-#   
-#   gsub("^(.*)\\1$", "\\1", input)
-#   
-# }
+## Find and remove repeated substrings
+find_and_remove_repeated_substring <- function(input){
+  
+  #input <- "assemblee generale de yerewoloassemblee generale de yerewolo"
+  
+  gsub("^(.*)\\1$", "\\1", input)
+  
+}
 
-## Create data.table dt ----
+## Create data.table dt
 # To work faster
 convert_to_dt <- function(input){
   
@@ -203,8 +208,11 @@ convert_to_dt <- function(input){
   
 }
 
-## Create and clean tokens ----
-create_dfm_speciale <- function(dt){
+## Create and clean tokens
+create_tokens <- function(dt){
+  
+  # Test
+  dt <- twitter_dt
   
   # Create corpus
   corpus <- corpus(dt$text, docvars = dt)
@@ -217,34 +225,26 @@ create_dfm_speciale <- function(dt){
                              remove_numbers = TRUE,
                              remove_url = TRUE)
   
-  # Lower case
-  tokens <- tokens_tolower(tokens)
-  
-  # Split into two
-  tokens_no_stem <- tokens_select(tokens,
-                                  strings_to_recode,
-                                  select = "keep")
-  
-  tokens_stem <- tokens_select(tokens,
-                               strings_to_recode,
-                               select = "remove")
-  
   # Stem one, dont stem the other
-  tokens_stem <- tokens_wordstem(tokens_stem, language = "fr")
+  tokens <- tokens_wordstem(tokens, language = "fr")
+  
+  # Return
+  tokens
+  
+}
+
+# Create dfm from tokens
+create_dfm <- function(tokens){
   
   # To dfm
-  dfm_stem <- dfm(tokens_stem, remove = stopwords(language = "fr"))
-  dfm_no_stem <- dfm(tokens_no_stem, remove = stopwords(language = "fr"))
-  
-  # Bind dfms
-  dfm <- cbind(dfm_stem, dfm_no_stem)
+  dfm <- dfm(tokens, remove = stopwords(language = "fr"))
   
   # Return
   dfm
   
 }
 
-
+# From dfm to tibble
 convert_dfm_to_tibble <- function(dfm, dt){
   
   # Convert from dfm to data.table
@@ -255,16 +255,16 @@ convert_dfm_to_tibble <- function(dfm, dt){
   
   # Join docvars back by document number
   # Then to tibble
-  tokens_master <- merge(dt, tokens_dt,
+  tokens_as_tibble <- merge(dt, tokens_dt,
                          all.x = TRUE, by = "document") %>%
     tibble()
   
   # Return
-  tokens_master
+  tokens_as_tibble
   
 }
 
-## Recode tokens post ----
+## Recode tokens post
 # Does two things:
 # (1) Replace previously imposed "_" underscores with spaces (like before)
 # (2) Recode misspellings
@@ -273,9 +273,11 @@ post_recode_tokens <- function(input){
   #input <- tokens_twitter
   
   # Remove self-imposed underscores "_"
+  # and 
   output <- input %>%
     mutate(#underscore_true = grepl("_", token),
-      token = gsub("_", " ", token))
+      token = gsub("_", " ", token),
+      token = str_squish(token))
   
   # Create named vector
   # First is removed
@@ -305,7 +307,7 @@ post_recode_tokens <- function(input){
                         "choguel" = "choguel kokalla maiga",
                         "choguel maiga" = "choguel kokalla maiga",
                         "boubou mabel" = "boubou mabel diawara",
-                        "vladim" = "poutin",
+                        #"vladim" = "poutin",
                         # ben le cerveau
                         "adama ben diarra" = "ben le cerveau",
                         "adama diarra" = "ben le cerveau",
@@ -375,49 +377,33 @@ post_recode_tokens <- function(input){
 # }
 
 
+# Combine Twitter and radio ----
+master_text <- bind_rows(twitter_master, radio_master)
+
 # Run functions ----
-
-## For Twitter ----
-twitter_dt <- twitter_master %>%
+master_dt <- master_text %>%
   mutate(text = remove_patterns_in_post(text),
          text = remove_accents(text),
+         text = tolower(text),
          text = find_and_remove_repeated_substring(text)) %>%
   recode_strings_before_tokenizing(strings_to_recode, .) %>%
   convert_to_dt()
 
-twitter_dfm <- twitter_dt %>%
-  create_dfm_speciale()
+master_tokens <- master_dt %>%
+  create_tokens()
 
-twitter_tokens <- convert_dfm_to_tibble(twitter_dfm, twitter_dt) %>%
-  post_recode_tokens()
+master_dfm <- master_tokens %>%
+  create_dfm()
 
-## Radio ----
-radio_dt <- radio_master %>%
-  mutate(text = remove_patterns_in_post(text),
-         text = remove_accents(text),
-         text = find_and_remove_repeated_substring(text)) %>%
-  recode_strings_before_tokenizing(strings_to_recode, .) %>%
-  convert_to_dt()
-
-radio_dfm <- radio_dt %>%
-  create_dfm_speciale()
-
-radio_tokens <- convert_dfm_to_tibble(radio_dfm, radio_dt) %>%
-  post_recode_tokens()
-
-# Final recoding ----
-# Remove single-character tokens
-twitter_tokens <- twitter_tokens %>%
-  filter(nchar(token) > 1)
-
-radio_tokens <- radio_tokens %>%
+master_tokens_tbl <- convert_dfm_to_tibble(master_dfm, master_dt) %>%
+  post_recode_tokens() %>%
+  # Remove single-character tokens
   filter(nchar(token) > 1)
 
 # Print or view ----
 # Print tokens with highest counts
 
-## Twitter ----
-twitter_tokens %>%
+master_tokens_tbl %>%
   group_by(token) %>%
   #group_by(token, token_less_interesting, token_more_interesting, token_was_recoded) %>%
   summarise(n = n()) %>%
@@ -426,16 +412,8 @@ twitter_tokens %>%
   arrange(-n) #%>% view("count")
 
 # Check individual tokens with view()
-twitter_tokens %>% filter(token == "wagn") %>%
+master_tokens_tbl %>% filter(token == "wagn") %>%
   arrange(text_nchar) #%>% view("token")
-
-
-## Radio ----
-radio_tokens %>%
-  group_by(token) %>%
-  summarise(n = n()) %>%
-  arrange(-n)
-
 
 
 
