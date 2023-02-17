@@ -170,7 +170,7 @@ strings_to_recode <- c(names, countries, groups, phrases) %>%
   tibble(old = .) %>%
   mutate(new = gsub(" ", "_", old),
          new = paste0(new, "_")
-         ) %>%
+  ) %>%
   # to named vector
   deframe()
 
@@ -208,11 +208,13 @@ convert_to_dt <- function(input){
   
 }
 
+# Create tokens ----
+
 ## Create and clean tokens
 create_tokens <- function(dt){
   
   # Test
-  dt <- twitter_dt
+  #dt <- master_dt
   
   # Create corpus
   corpus <- corpus(dt$text, docvars = dt)
@@ -228,12 +230,77 @@ create_tokens <- function(dt){
   # Stem one, dont stem the other
   tokens <- tokens_wordstem(tokens, language = "fr")
   
+  tokens
+  
+}
+
+tokens_to_recode <- c(
+  # countries
+  "🇲🇱" = "mal",
+  "🇨🇮" = "cote divoire",
+  "🇧🇫" = "burkina faso",
+  "burkina fasso" = "burkina faso",
+  "burkina" = "burkina faso",
+  "burkinafaso" = "burkina faso",
+  "🇫🇷" = "franc",
+  "🇷🇺" = "russ",
+  "🇺🇳" = "nations unies",
+  "🇬🇳" = "guinee",
+  "🇪🇺" = "union europeenne",
+  "lafriqu" = "afriqu",
+  "afrik" = "afriqu",
+  "dafriqu" = "afriqu",
+  # organisations
+  "minusm" = "minusma",
+  # names
+  "diakaridia dao" = "diakaridia dao bla",
+  "assim" = "assimi goita",
+  "don kibaru" = "don kibarou",
+  "keita cheick oumar" = "cheick oumar keita",
+  "choguel kokala maiga" = "choguel kokalla maiga",
+  "choguel" = "choguel kokalla maiga",
+  "choguel maiga" = "choguel kokalla maiga",
+  "boubou mabel" = "boubou mabel diawara",
+  "vladimir poutine" = "poutin",
+  #"vladim" = "poutin",
+  # ben le cerveau
+  "adama ben diarra" = "ben le cerveau",
+  "adama diarra" = "ben le cerveau",
+  "adama ben" = "ben le cerveau",
+  "ben diarra" = "ben le cerveau",
+  "ouattar" = "alassane ouattara",
+  "yerewolo" = "yerewolo debout sur les remparts",
+  "imam mahamoud dicko" = "imam dicko",
+  "imam mahmoud dicko" = "imam dicko")
+
+# Replace/recode tokens
+replace_tokens <- function(tokens, tokens_to_recode){
+  
+  # Test
+  #tokens <- master_tokens
+  
+  # Change names of named vector to replace
+  names(tokens_to_recode) <- paste0("^", names(tokens_to_recode), "$")
+  
+  # Create replacement tokens
+  # No underscores, no whitespace at the end
+  replacement_tokens <- types(tokens) %>%
+    stringi::stri_replace_all_regex(., "\\_", " ") %>%
+    stringi::stri_replace_all_regex(., " $", "") %>%
+    str_replace_all(., tokens_to_recode)
+  
+  tokens <- tokens_replace(tokens, 
+                           pattern = types(tokens), 
+                           replacement = replacement_tokens,
+                           valuetype = "fixed")
+  
   # Return
   tokens
   
 }
 
-# Create dfm from tokens
+# Create dfm ----
+## Create dfm from tokens
 create_dfm <- function(tokens){
   
   # To dfm
@@ -256,7 +323,7 @@ convert_dfm_to_tibble <- function(dfm, dt){
   # Join docvars back by document number
   # Then to tibble
   tokens_as_tibble <- merge(dt, tokens_dt,
-                         all.x = TRUE, by = "document") %>%
+                            all.x = TRUE, by = "document") %>%
     tibble()
   
   # Return
@@ -264,121 +331,9 @@ convert_dfm_to_tibble <- function(dfm, dt){
   
 }
 
-## Recode tokens post
-# Does two things:
-# (1) Replace previously imposed "_" underscores with spaces (like before)
-# (2) Recode misspellings
-post_recode_tokens <- function(input){
-  
-  #input <- tokens_twitter
-  
-  # Remove self-imposed underscores "_"
-  # and 
-  output <- input %>%
-    mutate(#underscore_true = grepl("_", token),
-      token = gsub("_", " ", token),
-      token = str_squish(token))
-  
-  # Create named vector
-  # First is removed
-  # Second is replacement
-  tokens_to_recode <- c("🇲🇱" = "mal",
-                        "🇨🇮" = "cote divoire",
-                        "🇧🇫" = "burkina faso",
-                        "burkina fasso" = "burkina faso",
-                        "burkina" = "burkina faso",
-                        "burkinafaso" = "burkina faso",
-                        "🇫🇷" = "franc",
-                        "🇷🇺" = "russ",
-                        "🇺🇳" = "nations unies",
-                        "🇬🇳" = "guinee",
-                        "🇪🇺" = "union europeenne",
-                        "lafriqu" = "afriqu",
-                        "afrik" = "afriqu",
-                        "dafriqu" = "afriqu",
-                        # organisations
-                        "minusm" = "minusma",
-                        # names
-                        "diakaridia dao" = "diakaridia dao bla",
-                        "assim" = "assimi goita",
-                        "don kibaru" = "don kibarou",
-                        "keita cheick oumar" = "cheick oumar keita",
-                        "choguel kokala maiga" = "choguel kokalla maiga",
-                        "choguel" = "choguel kokalla maiga",
-                        "choguel maiga" = "choguel kokalla maiga",
-                        "boubou mabel" = "boubou mabel diawara",
-                        #"vladim" = "poutin",
-                        # ben le cerveau
-                        "adama ben diarra" = "ben le cerveau",
-                        "adama diarra" = "ben le cerveau",
-                        "adama ben" = "ben le cerveau",
-                        "ben diarra" = "ben le cerveau",
-                        "ouattar" = "alassane ouattara",
-                        "yerewolo" = "yerewolo debout sur les remparts",
-                        "imam mahamoud dicko" = "imam dicko",
-                        "imam mahmoud dicko" = "imam dicko")
-  
-  names(tokens_to_recode) <- paste0("^", names(tokens_to_recode), "$")
-  
-  # Replace
-  output <- output %>%
-    mutate(token = str_replace_all(token, tokens_to_recode))
-  
-  # Other recoding
-  # Vector of less interesting tokens
-  tokens_less_interesting <- c("cest", "tout", "grand", "at", "tre", "plus", "dun", "fait",
-                               "tous", "invit", "san", "ete", "mr", "entre", "ecout", "si",
-                               "fin", "apre", "an", "ca", "dit", "partag", "contact",
-                               "direct", "mem", "jour", "quil", "sous", "autr", "va",
-                               "nest", "deux", "non") %>%
-    paste0("^", ., "$") %>%
-    paste0(., collapse = "|")
-  
-  tokens_more_interesting <- c("paix", "urgent", "macron",
-                               "guerr", "dieu", 
-                               "developp", "mercenair", "gouvern",
-                               # organisations or groups
-                               "urd",
-                               "cedeao", "cemac", "sadec", "minusm", "corem",
-                               "militair", "bamako", "afriqu", "russ", "radio", "mort",
-                               "econom", "independ", "souverainet", "zelensky", "ukrain",
-                               "accord", "mobilis", "occidental", "allah",
-                               "sahel", "menac", "cfa", "milit", "islam", "alger") %>%
-    paste0("^", ., "$") %>%
-    paste0(., collapse = "|")
-  
-  # Run recoding, three columns
-  output <- output %>%
-    mutate(token_less_interesting = grepl(tokens_less_interesting, token),
-           token_was_recoded = grepl(strings_to_recode %>%
-                                       paste0("^", ., "$") %>%
-                                       paste0(., collapse = "|") %>%
-                                       gsub("_", " ", .),
-                                     token),
-           token_more_interesting = grepl(tokens_more_interesting, token))
-  
-  output
-  
-}
-
-## Join lexicon to tokens ----
-# add_sentiment_to_tokens <- function(tokens_master, afinn_stem){
-#   
-#   # Join sentiment dictionary to tokens
-#   senti_tokens <- merge(tokens_master %>% as.data.table(),
-#                         afinn_stem %>% rename(token = stem) %>% as.data.table(),
-#                         all.x = TRUE,
-#                         by = "token") %>%
-#     tibble()
-#   
-#   # Return
-#   senti_tokens
-#   
-# }
-
-
 # Combine Twitter and radio ----
 master_text <- bind_rows(twitter_master, radio_master)
+#master_text <- twitter_master
 
 # Run functions ----
 master_dt <- master_text %>%
@@ -390,14 +345,16 @@ master_dt <- master_text %>%
   convert_to_dt()
 
 master_tokens <- master_dt %>%
-  create_tokens()
+  create_tokens() %>%
+  replace_tokens(., tokens_to_recode)
 
 master_dfm <- master_tokens %>%
   create_dfm()
 
-master_tokens_tbl <- convert_dfm_to_tibble(master_dfm, master_dt) %>%
-  post_recode_tokens() %>%
-  # Remove single-character tokens
+topfeatures(master_dfm, n = 10)
+
+master_tokens_tbl <- master_dfm %>%
+  convert_dfm_to_tibble(., master_dt) %>%
   filter(nchar(token) > 1)
 
 # Print or view ----
@@ -405,15 +362,12 @@ master_tokens_tbl <- convert_dfm_to_tibble(master_dfm, master_dt) %>%
 
 master_tokens_tbl %>%
   group_by(token) %>%
-  #group_by(token, token_less_interesting, token_more_interesting, token_was_recoded) %>%
   summarise(n = n()) %>%
-  #filter(n > 50) %>%
-  #filter(!token_less_interesting & !token_was_recoded) %>%
   arrange(-n) #%>% view("count")
 
 # Check individual tokens with view()
-master_tokens_tbl %>% filter(token == "wagn") %>%
-  arrange(text_nchar) #%>% view("token")
+master_tokens_tbl %>% filter(token == "poutin") %>%
+  arrange(text_nchar) %>% view("token")
 
 
 
