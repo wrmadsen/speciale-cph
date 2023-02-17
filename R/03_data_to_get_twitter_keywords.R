@@ -2,10 +2,11 @@
 
 # Create data to get Tweets by keywords -----
 # Keysword to scrape
-key_words_to_scrape <- c("poutine touadera",
-                         "centrafrique poutine",
-                         "centrafrique wagner",
-                         "wagner touadera")
+key_words_to_scrape <- c(#"poutine touadera",
+                         #"centrafrique poutine",
+                         #"centrafrique wagner",
+                         #"wagner touadera",
+                         "centrafrique")
 
 key_words_to_scrape <- paste0("lang:fr ", key_words_to_scrape)
 
@@ -20,11 +21,11 @@ get_tweets_keywords <- get_tweets_keywords %>%
   rowwise() %>%
   mutate(since = list(seq.Date(start,
                               end,
-                              by = "12 month"))
+                              by = "1 month"))
   ) %>%
   tidyr::unnest(since) %>%
   transmute(keyword,
-            limit = 10,
+            limit = 100,
             since , # get start time (since)
             until = since + months(6) - days(1) # get end time (to)
   )

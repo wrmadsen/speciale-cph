@@ -21,7 +21,7 @@ radio <- radio_raw %>%
          date = gsub(" ..\\:..$", "", date),
          date = str_replace_all(date, fr_to_en_months),
          date = as.Date(date, "%d %B %Y")) %>%
-  transmute(name = "Radio Ndeke Luka",
+  transmute(name,
             group = "Radio",
             date,
             week = floor_date(date, unit = "week"),
@@ -38,6 +38,8 @@ radio <- radio_raw %>%
 radio_master <- radio
 
 head(radio_master)
+
+summary(radio_master$date)
 
 
 

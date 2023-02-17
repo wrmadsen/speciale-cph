@@ -28,12 +28,15 @@ get_links_from_radiondekeluka <- function(url){
 }
 
 # Run for loop
-n <- 150
+# from start to n
+# use n in file name to be saved
+start <- 150
+n <- 300
 n*13 # n of articles
 data_list = list()
 data_list = vector("list", length = n)
 
-for (i in 1:n) {
+for (i in start:n) {
   
   i <- i*13
   
@@ -64,7 +67,7 @@ all_links_radiondekeluka <- data_list %>%
   distinct(link, .keep_all = TRUE)
 
 # Save URLs as a csv
-#write_csv(all_links_radiondekeluka, "data-raw/Radio/all_links_radiondekeluka.csv")
+#write_csv(all_links_radiondekeluka, "data-raw/Radio/radio_all_links_radiondekeluka_150_300.csv")
 
 ## Then scrape articles ----
 
@@ -120,7 +123,7 @@ map_df_progress <- function(.x, .f, ..., .id = NULL) {
 articles_radiondekeluka <- map_df_progress(all_links_radiondekeluka$link, scrape_radiondekeluka_article)
 
 # Save Radio Ndeke Luka
-#write_csv(articles_radiondekeluka, "data-raw/Radio/articles_radiondekeluka.csv")
+#write_csv(articles_radiondekeluka, "data-raw/Radio/radio_articles_radiondekeluka_150_300.csv")
 
 
 # Scrape Lengo Sango (backed by Russia) ----

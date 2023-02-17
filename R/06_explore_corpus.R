@@ -1,17 +1,15 @@
 # Explore corpus
 
 
-# keywords-in-context
-master_dfm %>%
-  filter()
-kwic(., pattern = "russi")
-
-ntoken(master_dfm)
+# Keywords-in-context
+master_tokens %>%
+  kwic(., pattern = "russ", window = 3)
 
 
 # Lexical diversity
 ntoken(master_dfm) %>%
   tibble()
+
 ntype(master_dfm)
 
 plot(ntoken(master_dfm),
@@ -32,47 +30,9 @@ master_tokens
 
 # Calculate similarity
 
-m_dfm_tf_idf <- twitter_dfm %>% dfm_tfidf()
-radio_dfm_tf_idf <- radio_dfm %>% dfm_tfidf()
-
-topfeatures(twitter_dfm_tf_idf)
-topfeatures(radio_dfm_tf_idf)
-
-
-# Cosine similarity -----
-cosine_sim <- function(a, b){
-  
-  # Calculate the inner product of the two vectors
-  numerator <- sum(a * b)
-  
-  # Calculate the magnitude of the first vector
-  magnitude_a <- sqrt(sum(a^2))
-  
-  # Calculate the magnitude of the second vector
-  magnitude_b <- sqrt(sum(b^2))
-  
-  # Calculate the denominator
-  denominator <- magnitude_a * magnitude_b
-  
-  # Calculate the similarity
-  cos_sim <- numerator/denominator
-  
-  return(cos_sim)
-  
-}
-
-topfeatures(master_dfm)
-
 topfeatures(master_dfm_tf_idf)
 
-# Calculate the cosine similarity
-cosine_sim <- textstat_simil(x = master_dfm_tf_idf, 
-                             y = master_dfm_tf_idf[docvars(master_dfm_tf_idf)$group == "Twitter",],
-                             method = "cosine")
-
-# Assign variable to data.frame
-master_dfm_tf_idf$cosine_sim <- as.numeric(cosine_sim)
-
+topfeatures(master_dfm)
 
 # Fightin' words ----
 fightin_words <- function(dfm_input, covariate, group_1 = "Twitter", group_2 = "Radio", alpha_0 = 1){
@@ -108,12 +68,23 @@ fightin_words <- function(dfm_input, covariate, group_1 = "Twitter", group_2 = "
 }
 
 # Calculate fw scores
-# Higher score, more similar to group_1 (Twitter)
+# Higher score, more similar to group_1 (here, this is Twitter)
 fw_scores <- fightin_words(master_dfm, covariate = "group", "Twitter", "Radio") %>%
   tibble()
 
 fw_scores %>%
-  arrange(score) %>% view
+  arrange(-score)# %>% view
+
+
+
+# Dates -----
+
+master_tokens_tbl %>%
+  filter(group == "Twitter") %>%
+  .$date %>% summary()
+
+
+
 
 
 

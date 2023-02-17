@@ -349,7 +349,8 @@ master_dt <- master_text %>%
          text = tolower(text),
          text = find_and_remove_repeated_substring(text)) %>%
   recode_strings_before_tokenizing(strings_to_recode, .) %>%
-  convert_to_dt()
+  convert_to_dt() %>%
+  arrange(group, date)
 
 master_tokens <- master_dt %>%
   create_tokens() %>%

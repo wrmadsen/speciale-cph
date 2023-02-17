@@ -15,6 +15,7 @@ def get_tweets_by_keyword(keyword, limit, since, until):
     # Scrape
     for i, tweet in enumerate(
         sntwitter.TwitterSearchScraper(keyword + " since:" + since + " until:" + until).get_items()):
+        print(str(i) + " " + keyword)
 
     # When limit is hit
         if i > limit:

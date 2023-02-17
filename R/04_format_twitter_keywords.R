@@ -3,6 +3,8 @@
 # Tidy ----
 twitter_keywords <- twitter_keywords_raw %>%
   clean_names() %>%
+  # Select batch of downloads
+  filter(id == "lang:fr centrafrique") %>%
   # format coordinates
   mutate(coordinates = gsub("Coordinates\\(longitude\\=| latitude\\=|\\)", "", coordinates),
          longitude = gsub("\\,.+", "", coordinates) %>% as.double(),
