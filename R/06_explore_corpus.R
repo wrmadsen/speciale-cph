@@ -1,6 +1,17 @@
+# Explore corpus
+
+
+# keywords-in-context
+kwic(twitter_tokens, pattern = "terror")
+
+
+corpus(twi)
+
+
+
 # Calculate similarity
 
-twitter_dfm_tf_idf <- twitter_dfm %>% dfm_tfidf()
+m_dfm_tf_idf <- twitter_dfm %>% dfm_tfidf()
 radio_dfm_tf_idf <- radio_dfm %>% dfm_tfidf()
 
 topfeatures(twitter_dfm_tf_idf)
