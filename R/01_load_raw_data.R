@@ -1,7 +1,20 @@
 # Load raw data
 
 # Radio data -----
-radio_raw <- read_csv("data-raw/Radio/articles_radiondekeluka.csv")
+read_bind_radio <- function(files){
+  
+  name_of_radio <- gsub("data\\-raw\\/Radio\\/radio_articles\\_|\\.csv|_.+|\\d+", "", files)
+  
+  read_csv(files) %>%
+    clean_names() %>%
+    mutate(name = name_of_radio,
+           name = recode(name,
+                       "radiondekeluka" = "Radio Ndeke Luka"))
+  
+}
+
+radio_raw <- list.files(pattern = "radio_articles.+\\.csv", recursive = TRUE) %>%
+  map_df(read_bind_radio)
 
 # Twitter data ----
 # By keywords
