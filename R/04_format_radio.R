@@ -22,12 +22,13 @@ radio <- radio_raw %>%
          date = str_replace_all(date, fr_to_en_months),
          date = as.Date(date, "%d %B %Y")) %>%
   transmute(name = "Radio Ndeke Luka",
+            group = "Radio",
             date,
-            text = paste0(title, body),
+            week = floor_date(date, unit = "week"),
+            text = paste0(title, " ", body),
+            text_nchar = nchar(text),
             title,
             body,
-            text_nchar = nchar(text),
-            week = floor_date(date, unit = "week"),
             url
   ) %>%
   arrange(date) %>%
