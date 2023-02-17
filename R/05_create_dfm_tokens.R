@@ -227,7 +227,14 @@ create_tokens <- function(dt){
                              remove_numbers = TRUE,
                              remove_url = TRUE)
   
-  # Stem one, dont stem the other
+  # Format stopwords (remove accents)
+  french_stopwords <- stopwords(language = "fr") %>%
+    stri_trans_general(str = ., id = "Latin-ASCII")
+  
+  # Remove stopwords before stemming the tokens
+  tokens <- tokens_remove(tokens, pattern = french_stopwords)
+  
+  # Stem tokens
   tokens <- tokens_wordstem(tokens, language = "fr")
   
   tokens
@@ -304,7 +311,7 @@ replace_tokens <- function(tokens, tokens_to_recode){
 create_dfm <- function(tokens){
   
   # To dfm
-  dfm <- dfm(tokens, remove = stopwords(language = "fr"))
+  dfm <- dfm(tokens)
   
   # Return
   dfm
@@ -351,6 +358,9 @@ master_tokens <- master_dt %>%
 master_dfm <- master_tokens %>%
   create_dfm()
 
+master_dfm_tf_idf <- master_dfm %>%
+  dfm_tfidf()
+
 topfeatures(master_dfm, n = 10)
 
 master_tokens_tbl <- master_dfm %>%
@@ -367,7 +377,7 @@ master_tokens_tbl %>%
 
 # Check individual tokens with view()
 master_tokens_tbl %>% filter(token == "poutin") %>%
-  arrange(text_nchar) %>% view("token")
+  arrange(text_nchar) #%>% view("token")
 
 
 
