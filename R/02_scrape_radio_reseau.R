@@ -1,28 +1,19 @@
-# Scrape CAR medias
-
-# Packages to run script as a background job
-library(tidyverse)
-library(rvest)
-
-# Scrape Radio Ndeke Luka ----
-# Scrape URLs of articles on each page on Radio website
-# Until 2017, so around page 347 (4500 articles circa)
-# For example 13:4485
-# Test with 13:169
+# Scrape Réseau des journalistes pour les Droits de l'homme
 
 ## Get links -----
 
 # Main URL
-url_radiondekeluka <- "https://www.radiondekeluka.org/actualites.html?start" #=13 for example
+url_radio_reseau <- "https://www.rjdhrca.org/category/actualites/page/" #"1/" for example
 
 # Function to get links from each page
-get_links_from_radiondekeluka <- function(url){
+get_links_from_radio_reseau <- function(url){
   
-  url %>%
+  url_radio_reseau %>%
+    paste0("1/") %>%
     read_html() %>%
     html_elements(".articleLinkContainer") %>% 
     html_attr("href") %>%
-    tibble("link" = .) %>%
+    tibble("link" = .)
     mutate(link = paste0("https://www.radiondekeluka.org", link))
   
 }
@@ -30,8 +21,8 @@ get_links_from_radiondekeluka <- function(url){
 # Run for loop
 # from start to n
 # use n in file name to be saved
-start <- 150
-n <- 300
+start <- 299
+n <- 347
 n*13 # n of articles
 data_list = list()
 data_list = vector("list", length = n)
@@ -40,9 +31,9 @@ for (i in start:n) {
   
   i <- i*13
   
-  new_links <- url_radiondekeluka %>%
-    paste0(., "=", i) %>%
-    get_links_from_radiondekeluka(.)
+  new_links <- url_radio_reseau %>%
+    paste0(., i, "/") %>%
+    get_links_from_radio_reseau(.)
   
   data_list[[i]] <- new_links
   
@@ -67,12 +58,12 @@ all_links_radiondekeluka <- data_list %>%
   distinct(link, .keep_all = TRUE)
 
 # Save URLs as a csv
-#write_csv(all_links_radiondekeluka, "data-raw/Radio/radio_all_links_radiondekeluka_150_300.csv")
+write_csv(all_links_radio_reseau, "data-raw/Radio/radio_all_links_radio_reseau_0.csv")
 
 ## Then scrape articles ----
 
 # Scrape each article with their url
-scrape_radiondekeluka_article <- function(url){
+scrape_radio_reseau_article <- function(url){
   
   #url <- links_to_articles$link[1]
   
@@ -103,39 +94,10 @@ scrape_radiondekeluka_article <- function(url){
   
 }
 
-# Map df function with a progress bar
-map_df_progress <- function(.x, .f, ..., .id = NULL) {
-  
-  .f <- purrr::as_mapper(.f, ...)
-  pb <- progress::progress_bar$new(total = length(.x), force = TRUE)
-  
-  
-  f <- function(...) {
-    pb$tick()
-    .f(...)
-  }
-  
-  purrr::map_df(.x, f, ..., .id = .id)
-  
-}
-
 # Map across to scrape articles
-articles_radiondekeluka <- map_df_progress(all_links_radiondekeluka$link, scrape_radiondekeluka_article)
+articles_radio_reseau <- map_df_progress(all_links_radion_reseau$link, scrape_radio_reseau_article)
 
-# Save Radio Ndeke Luka
-#write_csv(articles_radiondekeluka, "data-raw/Radio/radio_articles_radiondekeluka_150_300.csv")
-
-
-# Scrape Lengo Sango (backed by Russia) ----
-
-
-
-
-
-
-
-
-
-
+# Save articles
+write_csv(articles_radio_reseau, "data-raw/Radio/radio_articles_radio_reseau_0.csv")
 
 
