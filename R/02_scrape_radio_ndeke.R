@@ -66,7 +66,7 @@ all_links_radiondekeluka <- data_list %>%
   distinct(link, .keep_all = TRUE)
 
 # Save URLs as a csv
-write_csv(all_links_radiondekeluka, "data-raw/Radio/radio_all_links_radiondekeluka_300_347.csv")
+#write_csv(all_links_radiondekeluka, "data-raw/Radio/radio_all_links_radiondekeluka_NA.csv")
 
 ## Then scrape articles ----
 
@@ -106,7 +106,7 @@ scrape_radiondekeluka_article <- function(url){
 articles_radiondekeluka <- map_df_progress(all_links_radiondekeluka$link, scrape_radiondekeluka_article)
 
 # Save Radio Ndeke Luka
-write_csv(articles_radiondekeluka, "data-raw/Radio/radio_articles_radiondekeluka_300_347.csv")
+#write_csv(articles_radiondekeluka, "data-raw/Radio/radio_articles_radiondekeluka_NA.csv")
 
 
 
