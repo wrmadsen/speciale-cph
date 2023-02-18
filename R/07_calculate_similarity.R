@@ -72,6 +72,26 @@ cosine_sim_long %>% group_by(text_name) %>% filter(date == max(date))
 cosine_sim_full <- right_join(cosine_sim_long, dates_and_groups, by = "document_no")
 
 
+############# TESTS TO SOLVE ISSUE
+# Cosine_sim_full same length as cosine_sim_long ???
+nrow(cosine_sim_full) == nrow(cosine_sim_long)
+
+# Number of distinct doc_nos the same???
+length(unique(cosine_sim_full$document_no)) == length(unique(cosine_sim_long$document_no))
+
+# Does dates object also include same number of doc_nos???
+length(unique(dates_and_groups$document_no)) == length(unique(cosine_sim_long$document_no))
+length(unique(dates_and_groups$document_no)) == length(unique(cosine_sim_full$document_no))
+
+# CHECK That dates object's dates fit with orginal Twitter and radio dates (max and min)
+# Twitter docs_no: 
+# Radio: text1 to 
+# 
+
+# Why do text_no not fit between master_dt AND token/dfm objects???
+
+
+
 # Radio should show 2017 to 2023
 # text9556 is the oldest for radio ndeke
 # text14065 is the newest for radio ndeke
