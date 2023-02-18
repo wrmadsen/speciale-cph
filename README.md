@@ -8,7 +8,7 @@ Thesis at the University of Copenhagen. Speciale på Københavns Universitet.
 * Figure out how to use Botometer, Twitter (https://botometer.osome.iu.edu/)
 * Find traditional polling data in CAR
 * Other covariates?
-# Add lag to analysis. Twitter's effect on radio would be lagged, right?
+* Add lag to analysis. Twitter's effect on radio would be lagged, right?
 * Calculate sentiment
 * Subset cosine score to topic-specific datasets
 
