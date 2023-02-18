@@ -18,7 +18,7 @@ master_cosine %>%
   mutate(date = floor_date(date, unit = "week"),
          date_factor = as.factor(date),
          date_factor = fct_reorder(date_factor, date)) %>%
-  #filter(cosine_sim > 0) %>%
+  filter(cosine_sim > 0) %>%
   group_by(comparison, date_factor) %>%
   summarise(cosine_sim = mean(cosine_sim)) %>%
   filter(cosine_sim < 0.05) %>%
@@ -31,7 +31,7 @@ master_cosine %>%
   labs(title = "Cosine similarity score between Tweets and radio articles over time")
 
 master_cosine %>%
-  #filter(cosine_sim > 0) %>%
+  filter(cosine_sim > 0) %>%
   group_by(comparison, date) %>%
   summarise(cosine_sim = mean(cosine_sim)) %>%
   ggplot(.,

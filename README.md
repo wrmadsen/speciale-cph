@@ -1,25 +1,53 @@
 # The effect of Twitter disinformation on radio media in the Central African Republic (CAR)
 Thesis at the University of Copenhagen. Speciale på Københavns Universitet.
 
-## To-do list:
+## Random
+### To-do list:
 * Scrape Twitter
 * Scrape other media outlets (radios) in CAR
 * Figure out how to use Botometer, Twitter (https://botometer.osome.iu.edu/)
 * Find traditional polling data in CAR
 * Other covariates?
 # Add lag to analysis. Twitter's effect on radio would be lagged, right?
+* Calculate sentiment
+* Subset cosine score to topic-specific datasets
 
 ## Hypotheses
 * Radio Ndeke Luka's journalists read Twitter less after disinformation campagins began due to the notorious fake news.
 * 
 
+### CAR political topics:
+* Crypto-currency to undermine French currency.
+* Bozize's exclusion and later heading of rebel-group CPC.
+* Wagner group ending rebel blockade. 2021? Got control of several towns. Names of towns?
+* UN Report on mercenaries, March 2021.
+* Religious differences. Wagner conflating all Muslims (e.g. Fulani). Touadera is Christian. 89 % is either protestant or catholic.
+* Framing Wagner mercenaries as “instructors”.
+* Ndassima gold mine.
+* 2019 peace agreement.
+* Calls for new dialogues. But why would Touadera want to invite CPC?
+* Refugees.
 
-## Radio data collection process
+### Actors:
+* Touadera, president.
+* Alexander Ivanov, Russian. Framed as advisor. Heads the Officers Union for International Security, which purports to be an independent “peace advocacy” group.
+* Vladimir Titorenko. Was Russian Ambassador.
+* CPC. Led by Bozize. Fulani group within.
+* MINUSCA.
+* France, Macron.
+* Russia, Putin.
+* Lobaye Invest SARLU, Russian-owned company.
+* Wagner, Prigozhin.
+
+
+## Data collection processes
+### Radio data collection process
 * Radio Ndeke Luka: https://www.radiondekeluka.org/actualites.html?start=0
-* 
+* Radio Lengo Songo.
+* Radio Reseau des journalistes.
 
 
-## Twitter data collection process
+### Twitter data collection process
 1. Collect Tweets by keywords
 2. Identify Tweets that are relevant to CAR and Russian disinformation
 	* Remove Tweets regarding "Poutine" the food
@@ -36,8 +64,12 @@ End dataset is thus:
 	* Pro-Russian/Wagner Tweets may not be Russian nor orchestrated. But they may regurgitate whatever such Russian bots had attempted to set in motion. The original content of Russian bots may be more difficult to find due to being removed by Twitter.
 
 
-
 ## Analysis
+
+### Covariates
+* Text data that serves as control. Those that would not be affected, presumably.
+* Text data that serves as an indicator of the general flow of events. Reuters for example.
+* Conflict data. 
 
 
 ## Data sources

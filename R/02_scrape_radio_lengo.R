@@ -84,7 +84,7 @@ all_links_radio_lengo <- data_list %>%
   distinct(link, .keep_all = TRUE)
 
 # Save URLs as a csv
-write_csv(all_links_radio_lengo, "data-raw/Radio/radio_all_links_radiolengo_3.csv")
+#write_csv(all_links_radio_lengo, "data-raw/Radio/radio_all_links_radiolengo_4.csv")
 
 ## Then scrape articles ----
 
@@ -110,7 +110,7 @@ scrape_radio_lengo_article <- function(url){
   
   paste("\n", paste(title)) %>% print()
   
-  Sys.sleep(1.5)
+  Sys.sleep(3)
   
   # Create df
   tibble(url = url,
@@ -127,6 +127,6 @@ all_links_radion_lengo <- read_csv("data-raw/Radio/radio_all_links_radiolengo_3.
 articles_radio_lengo <- map_df_progress(all_links_radion_lengo$link, scrape_radio_lengo_article)
 
 # Save articles
-write_csv(articles_radio_lengo, "data-raw/Radio/radio_articles_radiolengo_3.csv")
+#write_csv(articles_radio_lengo, "data-raw/Radio/radio_articles_radiolengo_4.csv")
 
 

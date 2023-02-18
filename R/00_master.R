@@ -22,6 +22,8 @@ source("R/05_create_dfm_tokens.R")
 
 source("R/07_calculate_similarity.R")
 
+#source("R/08_calculate_sentiment.R")
+
 source("R/20_plot_descriptive.R")
 
 

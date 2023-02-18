@@ -102,4 +102,5 @@ cosine_results_4 <- create_cosine_tibble(radio_for_sim, twitter_for_sim, "All ra
 # Bind cosine results
 master_cosine <- bind_rows(cosine_results_1, cosine_results_2, cosine_results_3, cosine_results_4)
 
+#save(master_cosine, file = "data-formatted/master_cosine.RData")
 
