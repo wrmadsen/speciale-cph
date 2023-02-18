@@ -84,7 +84,7 @@ all_links_radio_lengo <- data_list %>%
   distinct(link, .keep_all = TRUE)
 
 # Save URLs as a csv
-write_csv(all_links_radio_lengo, "data-raw/Radio/radio_all_links_radio_lengo_2.csv")
+write_csv(all_links_radio_lengo, "data-raw/Radio/radio_all_links_radiolengo_3.csv")
 
 ## Then scrape articles ----
 
@@ -121,12 +121,12 @@ scrape_radio_lengo_article <- function(url){
 }
 
 # Read links
-#all_links_radion_lengo <- read_csv("data-raw/Radio/radio_all_links_radio_lengo_2.csv")
+all_links_radion_lengo <- read_csv("data-raw/Radio/radio_all_links_radiolengo_3.csv")
 
 # Map across to scrape articles
 articles_radio_lengo <- map_df_progress(all_links_radion_lengo$link, scrape_radio_lengo_article)
 
 # Save articles
-write_csv(articles_radio_lengo, "data-raw/Radio/radio_articles_radio_lengo_2.csv")
+write_csv(articles_radio_lengo, "data-raw/Radio/radio_articles_radiolengo_3.csv")
 
 

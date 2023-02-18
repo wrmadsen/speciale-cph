@@ -7,9 +7,12 @@ read_bind_radio <- function(files){
   
   read_csv(files) %>%
     clean_names() %>%
-    mutate(name = name_of_radio,
-           name = recode(name,
-                       "radiondekeluka" = "Radio Ndeke Luka"))
+    mutate(sub_group = name_of_radio,
+           sub_group = recode(sub_group,
+                       "radiondekeluka" = "Radio Ndeke Luka",
+                       "radiolengo" = "Radio Lengo Songo",
+                       "radioreseau" = "Reseau des journalistes",
+                       ))
   
 }
 

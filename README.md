@@ -7,6 +7,16 @@ Thesis at the University of Copenhagen. Speciale på Københavns Universitet.
 * Figure out how to use Botometer, Twitter (https://botometer.osome.iu.edu/)
 * Find traditional polling data in CAR
 * Other covariates?
+# Add lag to analysis. Twitter's effect on radio would be lagged, right?
+
+## Hypotheses
+* Radio Ndeke Luka's journalists read Twitter less after disinformation campagins began due to the notorious fake news.
+* 
+
+
+## Radio data collection process
+* Radio Ndeke Luka: https://www.radiondekeluka.org/actualites.html?start=0
+* 
 
 
 ## Twitter data collection process
@@ -25,9 +35,6 @@ End dataset is thus:
 	* Bots may represent Russian bots.
 	* Pro-Russian/Wagner Tweets may not be Russian nor orchestrated. But they may regurgitate whatever such Russian bots had attempted to set in motion. The original content of Russian bots may be more difficult to find due to being removed by Twitter.
 
-
-## Radio data collection process
-* Radio Ndeke Luka: https://www.radiondekeluka.org/actualites.html?start=0
 
 
 ## Analysis

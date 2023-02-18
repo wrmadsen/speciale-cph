@@ -11,6 +11,7 @@ twitter_keywords <- twitter_keywords_raw %>%
          latitude = gsub(".+\\,", "", coordinates) %>% as.double()) %>%
   transmute(name = user,
             group = "Twitter",
+            sub_group = id,
             date = as.Date(date_created),
             week = floor_date(date, unit = "week"),
             text = tweet,

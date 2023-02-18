@@ -80,8 +80,9 @@ fw_scores %>%
 # Dates -----
 
 master_tokens_tbl %>%
-  filter(group == "Twitter") %>%
-  .$date %>% summary()
+  filter(group == "Radio") %>%
+  filter(date == max(date) | date == min(date)) %>% view
+  distinct(document)
 
 
 

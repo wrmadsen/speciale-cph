@@ -62,7 +62,7 @@ get_links_from_radio_reseau <- function(url){
 #   distinct(link, .keep_all = TRUE)
 
 # Save URLs as a csv
-#write_csv(all_links_radio_reseau, "data-raw/Radio/radio_all_links_radio_reseau_1.csv")
+#write_csv(all_links_radio_reseau, "data-raw/Radio/radio_all_links_radioreseau_1.csv")
 
 ## Then scrape articles ----
 
@@ -99,12 +99,12 @@ scrape_radio_reseau_article <- function(url){
 }
 
 # Read links
-all_links_radion_reseau <- read_csv("data-raw/Radio/radio_all_links_radio_reseau_0.csv")
+all_links_radion_reseau <- read_csv("data-raw/Radio/radio_all_links_radioreseau_0.csv")
 
 # Map across to scrape articles
 articles_radio_reseau <- map_df_progress(all_links_radion_reseau$link, scrape_radio_reseau_article)
 
 # Save articles
-write_csv(articles_radio_reseau, "data-raw/Radio/radio_articles_radio_reseau_0.csv")
+#write_csv(articles_radio_reseau, "data-raw/Radio/radio_articles_radioreseau_0.csv")
 
 

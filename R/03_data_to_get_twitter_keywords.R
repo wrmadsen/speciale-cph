@@ -13,8 +13,8 @@ key_words_to_scrape <- paste0("lang:fr ", key_words_to_scrape)
 # Create tibbl
 get_tweets_keywords <- key_words_to_scrape %>%
   tibble("keyword" = .) %>%
-  mutate(start = as.Date("2018-01-01"),
-         end = as.Date("2023-02-01"))
+  mutate(start = as.Date("2014-01-01"),
+         end = as.Date("2019-02-01"))
 
 # For each keyword, create a number of periods to scrape
 get_tweets_keywords <- get_tweets_keywords %>%
