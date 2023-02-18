@@ -203,6 +203,7 @@ find_and_remove_repeated_substring <- function(input){
 convert_to_dt <- function(input){
   
   input %>%
+    arrange(group, date) %>%
     mutate(document = paste0("text", row_number())) %>%
     as.data.table()
   
@@ -349,8 +350,7 @@ master_dt <- master_text %>%
          text = tolower(text),
          text = find_and_remove_repeated_substring(text)) %>%
   recode_strings_before_tokenizing(strings_to_recode, .) %>%
-  convert_to_dt() %>%
-  arrange(group, date)
+  convert_to_dt()
 
 master_tokens <- master_dt %>%
   create_tokens() %>%
