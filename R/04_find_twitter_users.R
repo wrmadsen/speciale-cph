@@ -1,14 +1,9 @@
-# Find Twitter users
+# Find Twitter users that are either bots or live in CAR
+# Then create dataset to scrape their Tweets
 
-# Identify users that are within Mali ----
-# Mali max lat = 25
-# Mali min lat = 10
-# Mali max long = 5
-# Mali min long = -13
-# users_mali <- twitter_keywords %>%
-#   filter(!is.na(longitude)) %>%
-#   filter(longitude > -13 & longitude < 5 & latitude > 10 & latitude < 25) %>%
-#   distinct(user)
+# Find Twitter users ----
+
+## Identify users that are within CAR ----
 
 ## Convert tweets with points to sf
 twitter_keywords_points <- twitter_keywords %>%
@@ -22,10 +17,10 @@ twitter_keywords_no_points <- twitter_keywords %>%
   mutate(has_point = FALSE)
 
 # Find intersections between points and polygons
-intersections <- st_intersects(twitter_keywords_points, boundaries_subnational_simp)
+intersections <- st_intersects(twitter_keywords_points, gadm_simp)
 
 # Create region-row-number look-up
-region_look_up <- boundaries_subnational_simp %>%
+region_look_up <- gadm_simp %>%
   as.data.frame() %>%
   transmute(region_id = row_number(),
             country,
@@ -41,15 +36,35 @@ twitter_keywords_points_w_regions <- twitter_keywords_points %>%
   ) %>%
   left_join(., region_look_up, by = "region_id")
 
-# Filter users within Mali
+# Filter users within CAR
 get_tweets_users <- twitter_keywords_points_w_regions %>%
-  filter(country == "Mali") %>%
+  filter(country == "Central African Republic") %>%
   distinct(user)
 
-# Identify bots ----
+get_tweets_users
 
 
-# Create data to get Tweets by usernames -----
+## Identify bots ----
+# Need followers features to put into https://github.com/mkearney/tweetbotornot fast model ??
+# Name
+# Screen name
+# Location
+# Description (bio)
+twitter_keywords %>% distinct(user) %>% nrow()*200
+
+library(devtools)
+library(botcheck)
+
+# Rapid API key
+rapid_api_key = "4fc6142eb2msh41f020494846596p1655bbjsnf0b666eb6bd4"
+
+# Twitter app info
+consumer_key = "xxxxxxxxxxxxxxx"
+consumer_secret = "xxxxxxxxxxxxxxx"
+access_token = "xxxxxxxxxxxxxxx"
+access_secret = "xxxxxxxxxxxxxxx"
+
+# Create dataset to get Tweets by usernames -----
 get_tweets_users <- get_tweets_users %>%
   mutate(start = as.Date("2018-01-01"),
          end = as.Date("2023-02-01"))

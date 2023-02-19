@@ -52,8 +52,9 @@ create_cosine_tibble <- function(input_twitter, input_radio, name_of_column, mas
   # Then choose the date of the radio document
   # as the future reference marker
   cosine_sim_wide <- cosine_sim_full %>%
-    select(cosine_sim, cosine_id, text_name, date) %>%
-    pivot_wider(names_from = text_name, values_from = date) %>%
+    mutate(week = floor_date(date, unit = "week")) %>%
+    select(cosine_sim, cosine_id, text_name, week) %>%
+    pivot_wider(names_from = text_name, values_from = week) %>%
     mutate(days_diff = difftime(radio_document, twitter_document, units = c("days")),
            days_diff = days_diff %>% as.integer(),
            days_diff_abs = abs(days_diff) %>% as.integer())
@@ -65,15 +66,15 @@ create_cosine_tibble <- function(input_twitter, input_radio, name_of_column, mas
   
   # Return
   cosine_sim_final <- cosine_sim_sub %>%
-    transmute(comparison = name_of_column, date = radio_document, cosine_sim)
+    transmute(comparison = name_of_column, week = radio_document, cosine_sim)
   
   cosine_sim_final
   
-
+  
 }
 
 
-# Run function
+## Run function ----
 master_dt %>% distinct(sub_group)
 
 # Radio Ndeke and Twitter
@@ -98,9 +99,17 @@ radio_for_sim <- dfm_subset(master_dfm_tf_idf, group == "Radio")
 
 cosine_results_4 <- create_cosine_tibble(radio_for_sim, twitter_for_sim, "All radios and Twitter", master_dt)
 
-
 # Bind cosine results
 master_cosine <- bind_rows(cosine_results_1, cosine_results_2, cosine_results_3, cosine_results_4)
 
 #save(master_cosine, file = "data-formatted/master_cosine.RData")
+
+
+
+# Wordfish ----
+textmodel_wordfish(x = master_dfm_tf_idf,
+                   dir = c(which(master_dfm_tf_idf$sub_group == "Radio Lengo Songo"),
+                           which(master_dfm_tf_idf$sub_group == "Radio Ndeke Luka")))
+
+
 

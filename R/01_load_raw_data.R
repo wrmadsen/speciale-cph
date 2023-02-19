@@ -9,10 +9,10 @@ read_bind_radio <- function(files){
     clean_names() %>%
     mutate(sub_group = name_of_radio,
            sub_group = recode(sub_group,
-                       "radiondekeluka" = "Radio Ndeke Luka",
-                       "radiolengo" = "Radio Lengo Songo",
-                       "radioreseau" = "Reseau des journalistes",
-                       ))
+                              "radiondekeluka" = "Radio Ndeke Luka",
+                              "radiolengo" = "Radio Lengo Songo",
+                              "radioreseau" = "Reseau des journalistes",
+           ))
   
 }
 
@@ -37,6 +37,10 @@ twitter_keywords_raw <- list.files(pattern = "twitter_keyword_.+\\.csv", recursi
 # By user
 
 # GADM data ----
-gadm_sub_raw <- list.files(pattern = "1.shp", recursive = TRUE) %>%
+# https://gadm.org/download_country.html
+gadm_raw <- list.files(pattern = "1.shp", recursive = TRUE) %>%
   map_df(~read_sf(.))
+
+
+
 

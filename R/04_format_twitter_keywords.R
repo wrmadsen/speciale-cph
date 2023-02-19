@@ -9,7 +9,7 @@ twitter_keywords <- twitter_keywords_raw %>%
   mutate(coordinates = gsub("Coordinates\\(longitude\\=| latitude\\=|\\)", "", coordinates),
          longitude = gsub("\\,.+", "", coordinates) %>% as.double(),
          latitude = gsub(".+\\,", "", coordinates) %>% as.double()) %>%
-  transmute(name = user,
+  transmute(user,
             group = "Twitter",
             sub_group = id,
             date = as.Date(date_created),

@@ -46,6 +46,13 @@ Thesis at the University of Copenhagen. Speciale på Københavns Universitet.
 * Radio Lengo Songo.
 * Radio Reseau des journalistes.
 
+| Radio  	    		 | Oldest data available | Newest data available |
+| -------------------------------| --------------------- | ---------------------
+| Radio Ndeke Luka  		 | 2017 		 | 2023
+| Radio Reseau des journalistes  | 2018  		 | 2023
+| Radio Lengo Songo		 | 2020  		 | 2023
+
+
 
 ### Twitter data collection process
 1. Collect Tweets by keywords
@@ -68,13 +75,23 @@ End dataset is thus:
 
 ### Covariates
 * Text data that serves as control. Those that would not be affected, presumably.
-* Text data that serves as an indicator of the general flow of events. Reuters for example.
+* Text data that serves as an indicator of the general flow of events.
+	* Reuters for example.
+	* Agence France-Presse (AFP): https://twitter.com/afpfr.
+	* #politique.
+	* BBC Afrique (en français). @bbcafrique.
 * Conflict data. 
 
 
 ## Data sources
 * Twitter with `snscrape`.
 * Radio content with web scraping in `R`.
+
+### French sentiment dictionaries:
+* FEEL French Expanded Emotion Lexicon: http://advanse.lirmm.fr/feel.php
+* BERT: https://github.com/TheophileBlard/french-sentiment-analysis-with-bert
+* proustr, tools for R: https://github.com/ColinFay/proustr
+* 
 
 
 ## Other

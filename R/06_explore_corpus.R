@@ -81,11 +81,12 @@ fw_scores %>%
 
 master_tokens_tbl %>%
   filter(group == "Radio") %>%
-  filter(date == max(date) | date == min(date)) %>% view
+  filter(date == max(date) | date == min(date)) %>%
   distinct(document)
 
 
-
+  
+# Random ---
 
 
 
