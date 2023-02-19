@@ -2,6 +2,7 @@
 
 load("data-formatted/master_cosine.RData")
 
+# Cosine similarity -----
 # Running variable
 data_for_model <- master_cosine %>%
   mutate(week = floor_date(date, unit = "week")) %>%
@@ -28,6 +29,9 @@ data_for_model <- data_for_model %>%
 model_results <- lm(gdvote ~ as.factor(comparison) + as.factor(year) + trarrprop,
                     data  = data_for_model)
 
+
+
+# Sentiment score ----
 
 
 

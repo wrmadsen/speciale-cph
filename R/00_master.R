@@ -20,7 +20,7 @@ source("R/04_format_twitter_keywords.R")
 
 source("R/05_create_dfm_tokens.R")
 
-source("R/07_calculate_similarity.R")
+#source("R/07_calculate_similarity.R")
 
 source("R/08_calculate_sentiment.R")
 

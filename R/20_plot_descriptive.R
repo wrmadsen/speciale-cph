@@ -55,7 +55,7 @@ master_cosine %>%
 #save_plot_speciale("output/cosine_sim_points_2.png")
 
 # Plot difference in similarity ----
-(data_for_model %>%
+data_for_model %>%
    filter(week > as.Date("2019-06-01")) %>%
    ggplot(.,
           aes(x = week,
@@ -67,9 +67,28 @@ master_cosine %>%
    geom_vline(xintercept = as.Date("2019-10-15")) + # October 2019 FB breakdown
    geom_vline(xintercept = as.Date("2020-12-27")) + # CAR pres election
    labs(title = "Difference to Radio Ndeke Luka in cosine similarity score over time") +
-   theme_speciale)
+   theme_speciale
 
 save_plot_speciale("output/diff_in_cosine_sim.png")
+
+
+# Plot sentiment over time -----
+# Regarding Russia (Poutine, Russia)
+master_senti_scores %>%
+   ggplot(.,
+          aes(x = week,
+              y = difference)) +
+   geom_point(aes(colour = sub_group)) +
+   geom_smooth(aes(colour = sub_group), size = 2, se = FALSE) +
+   facet_wrap(~sub_group) +
+   geom_vline(xintercept = as.Date("2018-01-15")) + # Wagner in CAR mentioned by Stratfor
+   geom_vline(xintercept = as.Date("2019-10-15")) + # October 2019 FB breakdown
+   geom_vline(xintercept = as.Date("2020-12-27")) + # CAR pres election
+   labs(title = "Relative sentiment regarding Russia over time",
+        subtitle = "Greater values signify larger difference in positive sentiment towards Russia than general topics.") +
+   theme_speciale
+
+save_plot_speciale("output/senti_scores.png")
 
 
 

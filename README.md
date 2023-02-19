@@ -1,7 +1,6 @@
 # The effect of Twitter disinformation on radio media in the Central African Republic (CAR)
 Thesis at the University of Copenhagen. Speciale på Københavns Universitet.
 
-## Random
 ### To-do list:
 * Scrape Twitter
 * Scrape other media outlets (radios) in CAR
@@ -46,12 +45,13 @@ Thesis at the University of Copenhagen. Speciale på Københavns Universitet.
 * Radio Lengo Songo.
 * Radio Reseau des journalistes.
 
-| Radio  	    		 | Oldest data available | Newest data available |
-| -------------------------------| --------------------- | ---------------------
-| Radio Ndeke Luka  		 | 2017 		 | 2023
-| Radio Reseau des journalistes  | 2018  		 | 2023
-| Radio Lengo Songo		 | 2020  		 | 2023
+| Radio  	    		 | Oldest data available | Newest data available | Collected  |
+| -------------------------------| --------------------- | --------------------- | -----------|
+| Radio Ndeke Luka  		 | 2017 		 | 2023			 |     Yes    |
+| Radio Reseau des journalistes  | 2018  		 | 2023			 |     Yes    |
+| Radio Lengo Songo		 | 2020  		 | 2023			 |     Yes    |
 
+Data available: Articles able to be scraped from their radio website. Perhaps their social media pages could be scraped instead in case they don't have relevant websites with published articles.
 
 
 ### Twitter data collection process
