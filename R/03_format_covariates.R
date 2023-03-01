@@ -8,7 +8,7 @@ spike_periods_to_join <- spike_periods %>%
                               by = "1 day"))
   ) %>%
   tidyr::unnest(date) %>%
-  select(spike_no, text, date)
+  select(spike_no, spike_text = text, date)
 
 # Sub-national boundaries ----
 gadm <- gadm_raw %>%

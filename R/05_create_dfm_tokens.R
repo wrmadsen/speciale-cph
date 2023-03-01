@@ -332,9 +332,15 @@ convert_dfm_to_tibble <- function(dfm, dt){
   
 }
 
+# Format before running functions ----
 # Combine Twitter and radio ----
 #master_text <- bind_rows(twitter_master, radio_master)
 master_text <- radio_master
+
+# Join spikes periods
+master_text <-master_text %>%
+  left_join(spike_periods_to_join) %>%
+  mutate(spike_no = if_else(is.na(spike_no), 0, spike_no))
 
 # Run functions ----
 master_dt <- master_text %>%
@@ -346,10 +352,10 @@ master_dt <- master_text %>%
   convert_to_dt()
 
 # Subset
-must_include <- c("russie", "poutine", "wagner", "russes", "russia")
-
-master_dt %>%
-  filter()
+# must_include <- c("russie", "poutine", "wagner", "russes", "russia")
+# 
+# master_dt %>%
+#   filter()
 
 master_tokens <- master_dt %>%
   create_tokens() %>%

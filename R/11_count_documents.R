@@ -80,13 +80,14 @@ count_docs %>%
                 y = 460,
                 label = stringr::str_wrap(text, 12)),
             family = theme_font,
-            size = 4) +
+            size = 6) +
   scale_colour_manual(name = "", values = colours_groups) +
   scale_x_date(labels = dateformat(), date_breaks = "4 months") +
   labs(title = "Index of number of documents over time for CAR media outlets (100 = April 2020)",
        subtitle = "Index. Central African Republic media outlets.",
        y = "Index",
-       x = NULL) +
+       x = NULL,
+       caption = "Source: William Rohde Madsen.") +
   theme_speciale
 
 save_plot_speciale("output/n_docs_per_week.png")
