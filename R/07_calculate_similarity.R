@@ -6,9 +6,9 @@
 create_cosine_tibble <- function(input_twitter, input_radio, name_of_column, master_dt){
   
   # Test
-  # name_of_column = "Test"
-  # input_twitter <- twitter_for_sim
-  # input_radio <- radio_for_sim
+  name_of_column = "Test"
+  input_twitter <- twitter_for_sim
+  input_radio <- radio_for_sim
   
   cosine_sim_scores <- textstat_simil(x = input_twitter, 
                                       y = input_radio,
@@ -52,7 +52,7 @@ create_cosine_tibble <- function(input_twitter, input_radio, name_of_column, mas
   # Then choose the date of the radio document
   # as the future reference marker
   cosine_sim_wide <- cosine_sim_full %>%
-    mutate(week = floor_date(date, unit = "week")) %>%
+    mutate(week = floor_date(date, unit = "week", week_start = getOption("lubridate.week.start", 1))) %>%
     select(cosine_sim, cosine_id, text_name, week) %>%
     pivot_wider(names_from = text_name, values_from = week) %>%
     mutate(days_diff = difftime(radio_document, twitter_document, units = c("days")),

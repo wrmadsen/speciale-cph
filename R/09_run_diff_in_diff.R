@@ -5,7 +5,7 @@ load("data-formatted/master_cosine.RData")
 # Cosine similarity -----
 # Running variable
 data_for_model <- master_cosine %>%
-  mutate(week = floor_date(date, unit = "week")) %>%
+  mutate(week = floor_date(date, unit = "week", week_start = getOption("lubridate.week.start", 1))) %>%
   group_by(comparison, week) %>%
   summarise(cosine_sim = mean(cosine_sim)) %>%
   ungroup() %>%
@@ -32,6 +32,27 @@ model_results <- lm(gdvote ~ as.factor(comparison) + as.factor(year) + trarrprop
 
 
 # Sentiment score ----
+# General
+data_for_model <- senti_for_model_general %>%
+  mutate(sub_group = as.factor(sub_group),
+         year = as.factor(year))
+
+lm(score_general ~ sub_group + year + score_twitter,
+   data  = data_for_model) %>% summary()
+
+# Russia-specific
+data_for_model <- senti_for_model_russia %>%
+  mutate(sub_group = as.factor(sub_group),
+         year = as.factor(year))
+
+lm(score_general ~ sub_group + score_twitter,
+   data  = data_for_model) %>% summary()
+
+
+
+
+
+
 
 
 
