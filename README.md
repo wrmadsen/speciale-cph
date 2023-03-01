@@ -10,6 +10,28 @@ Thesis at the University of Copenhagen. Speciale på Københavns Universitet.
 * Add lag to analysis. Twitter's effect on radio would be lagged, right?
 * Calculate sentiment
 * Subset cosine score to topic-specific datasets
+* Tokens:
+	* Plot difference in token-use by groups. Grouped by dates around peak and not around peak. Different peaks
+	* 
+
+## Analysis
+
+### Finding spikes in data
+* Identify unnatural spikes in document frequency
+* Create spike variable that distinguishes between documents close and far from these spikes
+* Run analysis to see difference in topics by spike variable
+
+
+### Covariates
+* Text data that serves as control. Those that would not be affected, presumably.
+* Text data that serves as an indicator of the general flow of events.
+	* Reuters for example.
+	* Agence France-Presse (AFP): https://twitter.com/afpfr.
+	* #politique.
+	* BBC Afrique (en français). @bbcafrique.
+* Conflict data. 
+
+
 
 ## Hypotheses
 * Radio Ndeke Luka's journalists read Twitter less after disinformation campagins began due to the notorious fake news.
@@ -69,18 +91,6 @@ End dataset is thus:
 * Dataset of Tweets that represent a Russian effort to disinform on Twitter:
 	* Bots may represent Russian bots.
 	* Pro-Russian/Wagner Tweets may not be Russian nor orchestrated. But they may regurgitate whatever such Russian bots had attempted to set in motion. The original content of Russian bots may be more difficult to find due to being removed by Twitter.
-
-
-## Analysis
-
-### Covariates
-* Text data that serves as control. Those that would not be affected, presumably.
-* Text data that serves as an indicator of the general flow of events.
-	* Reuters for example.
-	* Agence France-Presse (AFP): https://twitter.com/afpfr.
-	* #politique.
-	* BBC Afrique (en français). @bbcafrique.
-* Conflict data. 
 
 
 ## Data sources

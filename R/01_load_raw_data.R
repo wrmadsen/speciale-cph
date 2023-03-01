@@ -19,6 +19,9 @@ read_bind_radio <- function(files){
 radio_raw <- list.files(pattern = "radio_articles.+\\.csv", recursive = TRUE) %>%
   map_df(read_bind_radio)
 
+# Spike periods data
+spike_periods <- read_csv("output/spike_periods.csv")
+
 # Twitter data ----
 # By keywords
 read_bind_twitter <- function(files){
@@ -42,5 +45,7 @@ gadm_raw <- list.files(pattern = "1.shp", recursive = TRUE) %>%
   map_df(~read_sf(.))
 
 
+# FEEL sentiment dictionary ----
+feel_raw <- read_delim("data-raw/Sentiment/FEEL.csv", delim = ";")
 
 

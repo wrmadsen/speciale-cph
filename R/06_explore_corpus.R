@@ -3,7 +3,7 @@
 
 # Keywords-in-context
 master_tokens %>%
-  kwic(., pattern = "russ", window = 3)
+  kwic(., pattern = "russ", window = 5)
 
 
 # Lexical diversity
@@ -69,7 +69,8 @@ fightin_words <- function(dfm_input, covariate, group_1 = "Twitter", group_2 = "
 
 # Calculate fw scores
 # Higher score, more similar to group_1 (here, this is Twitter)
-fw_scores <- fightin_words(master_dfm, covariate = "group", "Twitter", "Radio") %>%
+fw_scores <- fightin_words(master_dfm, covariate = "sub_group",
+                           "Radio Lengo Songo", "Radio Ndeke Luka") %>%
   tibble()
 
 fw_scores %>%

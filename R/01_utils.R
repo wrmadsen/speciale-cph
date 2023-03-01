@@ -1,5 +1,6 @@
 # Utils
 
+# Various functions ----
 # Map df function with a progress bar
 map_df_progress <- function(.x, .f, ..., .id = NULL) {
   
@@ -13,6 +14,13 @@ map_df_progress <- function(.x, .f, ..., .id = NULL) {
   }
   
   purrr::map_df(.x, f, ..., .id = .id)
+  
+}
+
+# Remove accents from strings
+remove_accents <- function(input){
+  
+  stri_trans_general(str = input, id = "Latin-ASCII")
   
 }
 
@@ -50,9 +58,10 @@ gold_speciale <- "#D4AF37"
 crimson_red <- "#DC143C"
 
 # Groups-specific
-colours_groups <- c("🇲🇱YÈRÈWOLO DEBOUT SUR LES REMPARTS 🇲🇱" = red_speciale,
-                    "Club de soutien Adama BEN le Cerveau." = pink_speciale,
-                    "Les patriotes du MALI" = bluel_speciale)
+colours_groups <- c("Radio Ndeke Luka" = greenm_speciale,
+                    "Radio Lengo Songo" = gold_speciale,
+                    "Reseau des journalistes" = bluel_speciale,
+                    "Non-Russian total" = grey_speciale)
 
 # Annotation size ----
 # when text size

@@ -1,6 +1,16 @@
 # Format covariates
 
-## Sub-national boundaries ----
+# Spikes periods ----
+spike_periods_to_join <- spike_periods %>%
+  rowwise() %>%
+  mutate(date = list(seq.Date(date_min,
+                              date_max,
+                              by = "1 day"))
+  ) %>%
+  tidyr::unnest(date) %>%
+  select(spike_no, text, date)
+
+# Sub-national boundaries ----
 gadm <- gadm_raw %>%
   clean_names() %>%
   transmute(country = as.character(country),
@@ -25,7 +35,7 @@ gadm <- full_join(gadm %>%
                     mutate(id = row_number())
 )
 
-## Crop and simplify ----
+## Crop and simplify
 gadm_simp <- gadm %>%
   st_make_valid() %>%
   st_simplify(., dTolerance = 0.05)
@@ -40,5 +50,20 @@ gadm_simp <- gadm_simp %>%
   filter(focus)
 
 #plot(gadm_simp)
+
+
+# Format FEEL sentiment dictionary ----
+
+# Remove accents and stem
+feel <- feel_raw %>%
+  transmute(word = remove_accents(word),
+            score = case_when(polarity == "positive" ~ 1,
+                              polarity == "negative" ~ -1)
+  )
+
+
+
+
+
 
 

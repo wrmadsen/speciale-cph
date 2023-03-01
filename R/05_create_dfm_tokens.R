@@ -35,13 +35,6 @@ remove_patterns_in_post <- function(input){
   
 }
 
-## Remove accents from strings
-remove_accents <- function(input){
-  
-  stri_trans_general(str = input, id = "Latin-ASCII")
-  
-}
-
 # Strings to recode and avoid stemming ----
 # Only those with more than one word included here
 # Others 1-word tokens, which should be joined with two-words
@@ -340,8 +333,8 @@ convert_dfm_to_tibble <- function(dfm, dt){
 }
 
 # Combine Twitter and radio ----
-master_text <- bind_rows(twitter_master, radio_master)
-#master_text <- twitter_master
+#master_text <- bind_rows(twitter_master, radio_master)
+master_text <- radio_master
 
 # Run functions ----
 master_dt <- master_text %>%
@@ -351,6 +344,12 @@ master_dt <- master_text %>%
          text = find_and_remove_repeated_substring(text)) %>%
   recode_strings_before_tokenizing(strings_to_recode, .) %>%
   convert_to_dt()
+
+# Subset
+must_include <- c("russie", "poutine", "wagner", "russes", "russia")
+
+master_dt %>%
+  filter()
 
 master_tokens <- master_dt %>%
   create_tokens() %>%

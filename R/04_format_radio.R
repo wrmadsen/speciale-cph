@@ -48,11 +48,11 @@ radio <- radio_raw_binded %>%
   transmute(sub_group,
             group = "Radio",
             date,
-            week = floor_date(date, unit = "week"),
+            week = floor_date(date, unit = "week", week_start = getOption("lubridate.week.start", 1)),
+            month = floor_date(date, unit = "month"),
+            year = year(date),
             text = paste0(title, " ", body),
             text_nchar = nchar(text),
-            title,
-            body,
             url
   ) %>%
   arrange(date) %>%

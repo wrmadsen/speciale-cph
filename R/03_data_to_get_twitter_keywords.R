@@ -2,16 +2,30 @@
 
 # Create data to get Tweets by keywords -----
 # Keysword to scrape
-key_words_to_scrape <- c(#"poutine touadera",
-                         #"centrafrique poutine",
-                         #"centrafrique wagner",
-                         #"wagner touadera",
-                         "centrafrique")
+search_generic <- c(#"poutine touadera",
+  #"centrafrique poutine",
+  #"centrafrique wagner",
+  #"centra"
+  #"wagner touadera",
+  "centrafrique",
+  "centrafricaine")
 
-key_words_to_scrape <- paste0("lang:fr ", key_words_to_scrape)
+"(centrafrique OR centrafricaine) AND poutine"
 
-# Create tibbl
-get_tweets_keywords <- key_words_to_scrape %>%
+# Phrases pro-Russian or pro-Touadera
+search_disinfo_pro_russ <- c("russie fournit",
+                             "remercier touadera",
+                             "instructeurs")
+
+# Phrases anti-Russian, pro-France
+search_disinfo_anti_russ <- c("mercenaires",
+)
+
+# Add lang:fr and centrafrique
+search_generic <- paste0("lang:fr ", search_generic)
+
+# Create tibble
+get_tweets_keywords <- search_generic %>%
   tibble("keyword" = .) %>%
   mutate(start = as.Date("2014-01-01"),
          end = as.Date("2019-02-01"))
@@ -20,8 +34,8 @@ get_tweets_keywords <- key_words_to_scrape %>%
 get_tweets_keywords <- get_tweets_keywords %>%
   rowwise() %>%
   mutate(since = list(seq.Date(start,
-                              end,
-                              by = "1 month"))
+                               end,
+                               by = "1 month"))
   ) %>%
   tidyr::unnest(since) %>%
   transmute(keyword,
