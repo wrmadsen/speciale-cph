@@ -340,7 +340,14 @@ master_text <- radio_master
 # Join spikes periods
 master_text <-master_text %>%
   left_join(spike_periods_to_join) %>%
-  mutate(spike_no = if_else(is.na(spike_no), 0, spike_no))
+  mutate(spike_no = if_else(is.na(spike_no), 0, spike_no), 
+         spike_binary = if_else(spike_no > 0, 1, 0))
+
+# Add and bind non-Russian category
+master_text <- master_text %>%
+  filter(sub_group != "Radio Lengo Songo") %>%
+  mutate(sub_group = "Non-Russian total") %>%
+  bind_rows(master_text)
 
 # Run functions ----
 master_dt <- master_text %>%

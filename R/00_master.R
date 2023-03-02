@@ -1,6 +1,6 @@
 ## Master
 
-# Preperation ----
+# Preparation ----
 source("R/01_packages.R")
 
 source("R/01_utils.R")
@@ -29,9 +29,13 @@ source("R/05_create_dfm_tokens.R")
 
 # Calculations and analysis ----
 
-source("R/07_calculate_similarity.R")
+#source("R/07_calculate_similarity.R")
 
 #source("R/08_calculate_sentiment.R")
+
+#source("R/09_run_diff_in_diff.R")
+
+#source("R/10_structural_topic_model.R")
 
 # Plot ----
 

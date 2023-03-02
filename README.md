@@ -109,3 +109,15 @@ End dataset is thus:
 * lerepublicain_c, 2018-05-27 10:44:56, Twitter Web Client: `Centrafrique : Touadéra-Poutine,un tandem pour la stabilité du pays https://t.co/FfJStqkuL2 via @wordpressdotcom`
 * MChandrin, 2023-02-01 14:13:26, Twitter for Android: `@Gauthier_Pasq La patrie ou la mort nous vaincrons.  Vous finirez par comprendre. Vive POUTINE vive Assimi Goïta vive Ibrahim Traoré vive Touadera vive Doumbouya 🔥🔥🔥vive liran et vive la Chine`
 
+
+
+## Method resources
+Structural topic models:
+* https://juliasilge.com/blog/evaluating-stm/
+* https://ianadamsresearch.com/post/tidy-stm/tidying-stm-with-tidytext/
+* https://cschwem2er.github.io/stminsights/reference/get_effects.html
+
+
+
+
+
