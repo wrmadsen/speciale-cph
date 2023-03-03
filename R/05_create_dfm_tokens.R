@@ -341,7 +341,7 @@ master_text <- radio_master
 master_text <-master_text %>%
   left_join(spike_periods_to_join) %>%
   mutate(spike_no = if_else(is.na(spike_no), 0, spike_no), 
-         spike_binary = if_else(spike_no > 0, 1, 0))
+         spike_binary = if_else(spike_no > 0, 1, 0) %>% as.factor)
 
 # Add and bind non-Russian category
 master_text <- master_text %>%
