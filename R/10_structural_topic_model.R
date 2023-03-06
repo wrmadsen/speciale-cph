@@ -277,7 +277,7 @@ topic_labels_tibble <- topic_labels %>%
 # Effect of sub_group
 # 1:15 indicate the topic, thus all are included with 1:15
 prevalence_effects <- estimateEffect(formula = c(1:15) ~ sub_group*spike_binary, 
-                                     stmobj = stm_to_check_theta,
+                                     stmobj = stm_to_check,
                                      metadata = docvars(master_dfm))
 
 
@@ -322,93 +322,98 @@ effects_int_tibble %>%
 save_plot_speciale("output/diff_in_effect_spike_binary.png")
 
 ### Plot interaction effect between specific spike period and sub_group ----
-effects_int_1 <- stminsights::get_effects(estimates = prevalence_effects,
-                                          variable = "sub_group",
-                                          type = "pointestimate",
-                                          moderator = "spike_period",
-                                          modval = 0)
-
-effects_int_0 <- stminsights::get_effects(estimates = prevalence_effects,
-                                          variable = "sub_group",
-                                          type = "pointestimate",
-                                          moderator = "spike_period",
-                                          modval = 1)
-
-# Bind
-effects_int_tibble <- bind_rows(effects_int_1,
-                                effects_int_0) %>%
-  left_join(topic_labels_tibble) %>%
-  select(sub_group = value, prop = proportion, topic_name, moderator)
-
-# Pivot wide to calculate difference
-effects_int_tibble <- effects_int_tibble %>%
-  mutate(moderator = paste0("binary_", moderator)) %>%
-  pivot_wider(names_from = moderator, values_from = prop) %>%
-  mutate(difference = binary_1 - binary_0)
-
-# Plot
-effects_int_tibble %>%
-  ggplot(.,
-         aes(x = difference,
-             y = sub_group)) +
-  geom_col(aes(fill = sub_group)) +
-  facet_wrap(~topic_name) +
-  scale_fill_manual(name = "", values = colours_groups) +
-  labs(title = "Difference in effect of spike_binary = 1",
-       x = NULL,
-       caption = "Source: William Rohde Madsen.") +
-  theme_speciale
-
-save_plot_speciale("output/diff_in_effect_spike_binary.png")
-
-
-
-### Calculate probability of each word by topic ----
-# Using tidytext?
-# library(tidytext)
-stm_to_check_theta %>% tidy()
-
-td_gamma <- tidy(stm_to_check_theta, matrix = "gamma",
-                 document_names = rownames(out$meta))
-
-td_gamma
-
-
-
-# Topic correlations network ----
-set.seed(381)
-
-mod_out_corr <- topicCorr(stm_to_check_theta)
-
-plot(mod_out_corr, vlabels = topic_labels)
-
-# extract network
-library(stminsights)
-
-stm_corrs <- stminsights::get_network(model = stm_to_check_theta,
-                                      method = "simple",
-                                      labels = topic_labels,
-                                      cutoff = 0.001,
-                                      cutiso = TRUE)
-
-# plot network with ggraph
-ggraph(stm_corrs, layout = "fr") +
-  geom_edge_link(aes(edge_width = weight),
-                 label_colour = orange_speciale,
-                 edge_colour = bluel_speciale) +
-  geom_node_point(size = 4, colour = black_speciale)  +
-  geom_node_label(aes(label = name, size = props),
-                  colour = black_speciale,  repel = TRUE, alpha = 0.85) +
-  scale_size(range = c(3, 7), labels = scales::percent) +
-  scale_edge_width(range = c(1, 3)) +
-  labs(title = "Network and correlations of topics in structural topic model",
-       subtitle = NULL,
-       x = NULL,
-       y = NULL,
-       size = "Topic Proportion",  edge_width = "Topic Correlation") + 
-  theme_speciale +
-  theme(panel.grid.major = element_blank())
-
-
-
-
+calculate_diff_in_spike_period <- function(spike_period = 1){
+  
+  effects_int_1 <- stminsights::get_effects(estimates = prevalence_effects,
+                                            variable = "sub_group",
+                                            type = "pointestimate",
+                                            moderator = "spike_period",
+                                            modval = 0)
+  
+  effects_int_0 <- stminsights::get_effects(estimates = prevalence_effects,
+                                            variable = "sub_group",
+                                            type = "pointestimate",
+                                            moderator = "spike_period",
+                                            modval = 1)
+  
+  # Bind
+  effects_int_tibble <- bind_rows(effects_int_1,
+                                  effects_int_0) %>%
+    left_join(topic_labels_tibble) %>%
+    select(sub_group = value, prop = proportion, topic_name, moderator)
+  
+}
+  
+  # Pivot wide to calculate difference
+  effects_int_tibble <- effects_int_tibble %>%
+    mutate(moderator = paste0("binary_", moderator)) %>%
+    pivot_wider(names_from = moderator, values_from = prop) %>%
+    mutate(difference = binary_1 - binary_0)
+  
+  # Plot
+  effects_int_tibble %>%
+    ggplot(.,
+           aes(x = difference,
+               y = sub_group)) +
+    geom_col(aes(fill = sub_group)) +
+    facet_wrap(~topic_name) +
+    scale_fill_manual(name = "", values = colours_groups) +
+    labs(title = "Difference in effect of spike period",
+         x = NULL,
+         caption = "Source: William Rohde Madsen.") +
+    theme_speciale
+  
+  save_plot_speciale("output/diff_in_effect_spike_binary.png")
+  
+  
+  
+  ### Calculate probability of each word by topic ----
+  # Using tidytext?
+  # library(tidytext)
+  stm_to_check_theta %>% tidy()
+  
+  td_gamma <- tidy(stm_to_check_theta, matrix = "gamma",
+                   document_names = rownames(out$meta))
+  
+  td_gamma
+  
+  
+  
+  # Topic correlations network ----
+  set.seed(381)
+  
+  mod_out_corr <- topicCorr(stm_to_check_theta)
+  
+  plot(mod_out_corr, vlabels = topic_labels)
+  
+  # extract network
+  library(stminsights)
+  
+  stm_corrs <- stminsights::get_network(model = stm_to_check_theta,
+                                        method = "simple",
+                                        labels = topic_labels,
+                                        cutoff = 0.001,
+                                        cutiso = TRUE)
+  
+  # plot network with ggraph
+  ggraph(stm_corrs, layout = "fr") +
+    geom_edge_link(aes(edge_width = weight),
+                   label_colour = orange_speciale,
+                   edge_colour = bluel_speciale) +
+    geom_node_point(size = 4, colour = black_speciale)  +
+    geom_node_label(aes(label = name, size = props),
+                    colour = black_speciale,  repel = TRUE, alpha = 0.85) +
+    scale_size(range = c(3, 7), labels = scales::percent) +
+    scale_edge_width(range = c(1, 3)) +
+    labs(title = "Network and correlations of topics in structural topic model",
+         subtitle = NULL,
+         x = NULL,
+         y = NULL,
+         size = "Topic Proportion",  edge_width = "Topic Correlation") + 
+    theme_speciale +
+    theme(panel.grid.major = element_blank())
+  
+  
+  
+  
+  
