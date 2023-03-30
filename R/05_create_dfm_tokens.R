@@ -335,7 +335,7 @@ convert_dfm_to_tibble <- function(dfm, dt){
 # Format before running functions ----
 # Combine Twitter and radio ----
 #master_text <- bind_rows(twitter_master, radio_master)
-master_text <- radio_master
+master_text <- bind_rows(radio_master, digital_master)
 
 # Join spikes periods
 master_text <-master_text %>%
@@ -344,9 +344,12 @@ master_text <-master_text %>%
          spike_binary = if_else(spike_no > 0, 1, 0) %>% as.factor)
 
 # Add and bind non-Russian category
+russian_outlets <- c("Radio Lengo Songo", "Ndjoni Sango")
+
 master_text <- master_text %>%
-  filter(sub_group != "Radio Lengo Songo") %>%
-  mutate(sub_group = "Non-Russian total") %>%
+  filter(!sub_group %in% russian_outlets) %>%
+  mutate(sub_group = "Non-Russian total",
+         group = "Non-Russian total") %>%
   bind_rows(master_text)
 
 # Run functions ----

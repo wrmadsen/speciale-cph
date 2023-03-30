@@ -79,15 +79,51 @@ fw_scores %>%
 
 
 # Dates -----
-
 master_tokens_tbl %>%
   filter(group == "Radio") %>%
   filter(date == max(date) | date == min(date)) %>%
   distinct(document)
 
 
-  
-# Random ---
+
+# Data collection chapter ---
+# Summary
+master_text %>% summary()
+
+# Average per month per group
+master_text %>%
+  group_by(sub_group, month) %>%
+  summarise(n_month = n()) %>%
+  group_by(sub_group) %>%
+  mutate(n_total = sum(n_month),
+         average_month = mean(n_month)) %>%
+  distinct(sub_group, n_total, average_month)
+
+# Total per group
+master_text %>%
+  group_by(sub_group) %>%
+  summarise(n = n())
+
+# Periods per group
+master_text %>%
+  group_by(sub_group) %>%
+  summarise(min = min(date),
+            max = max(date))
+
+# Per month, mean, median
+master_text %>%
+  group_by(month) %>%
+  summarise(n = n()) %>%
+  ungroup() %>%
+  summarise(mean = mean(n),
+            median = median(n))
+
+
+
+
+
+
+
 
 
 

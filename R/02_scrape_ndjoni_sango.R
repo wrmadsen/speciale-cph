@@ -5,7 +5,7 @@
 source("R/01_packages.R")
 source("R/01_utils.R")
 
-# Scrape URLs of articles on each page on Radio website
+# Scrape URLs of articles on each page on website
 # 636 pages
 
 ## Get links -----
@@ -63,7 +63,7 @@ data_list = vector("list", length = n)
 #   distinct(link, .keep_all = TRUE)
 
 # Save URLs as a csv
-#write_csv(all_links_ndjoni_sango, "data-raw/Radio/radio_all_links_ndjoni_sango_2.csv")
+#write_csv(all_links_ndjoni_sango, "data-raw/Digital/digital_all_links_ndjonisango_2.csv")
 
 ## Then scrape articles ----
 
@@ -94,7 +94,7 @@ scrape_ndjoni_sango_article <- function(url){
   
   paste0("Article dated '", date, "' scraped at ", Sys.time()) %>% print()
   
-  runif(1, 3, 6) %>% Sys.sleep()
+  runif(1, 5, 10) %>% Sys.sleep()
   
   # Create df
   tibble(url = url,
@@ -105,10 +105,11 @@ scrape_ndjoni_sango_article <- function(url){
 }
 
 # Map across to scrape articles
-articles_ndjoni_sango <- map_df_progress(all_links_ndjoni_sango$link[1:2000], scrape_ndjoni_sango_article)
+# 20 minutes to do 2000 articles at runif(1, 3, 6) ?
+articles_ndjoni_sango <- map_df_progress(all_links_ndjoni_sango$link[5001:nrow(all_links_ndjoni_sango)], scrape_ndjoni_sango_article)
 
 # Save Radio Ndeke Luka
-write_csv(articles_ndjoni_sango, "data-raw/Radio/radio_articles_ndjoni_sango_1_2000.csv")
+write_csv(articles_ndjoni_sango, "data-raw/Digital/digital_articles_ndjonisango_5001_end.csv")
 
 
 

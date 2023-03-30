@@ -1,6 +1,6 @@
-# Format radio data
+# Format radio and digital media data
 
-# Tidy ----
+# Months vector ----
 fr_to_en_months <- c("janvier" = "january",
                      "février" = "February",
                      "mars" = "march",
@@ -14,7 +14,8 @@ fr_to_en_months <- c("janvier" = "january",
                      "novembre" = "november",
                      "décembre" = "december")
 
-## Correct dates first ----
+# Tidy Radio ----
+## Correct radio dates first ----
 radio_raw_binded <- bind_rows(
   # Radio Ndeke Luka
   radio_raw %>%
@@ -40,6 +41,7 @@ radio_raw_binded <- bind_rows(
            date = gsub(" ..\\:..$", "", date),
            date = str_replace_all(date, fr_to_en_months),
            date = as.Date(date, "%B %d, %Y"))
+  
 )
 
 ## Then transmute columns ----
@@ -66,5 +68,39 @@ head(radio_master)
 summary(radio_master$date)
 
 
+# Tidy digital media -----
+## Correct digital media dates -----
+digital_raw_binded <- bind_rows(
+  # Ndjoni Sango
+  digital_raw %>%
+    filter(sub_group == "Ndjoni Sango") %>%
+    mutate(date = str_squish(date),
+           dateog2 = date,
+           date = str_extract(date, "\\d+\\s\\D+\\s\\d+"),
+           date = str_replace_all(date, fr_to_en_months),
+           date = as.Date(date, "%d %B %Y")
+    )
+  
+)
+
+
+## Then transmute columns ----
+digital <- digital_raw_binded %>%
+  arrange(sub_group, date) %>%
+  transmute(sub_group,
+            group = "Digital",
+            date,
+            week = floor_date(date, unit = "week", week_start = getOption("lubridate.week.start", 1)),
+            month = floor_date(date, unit = "month"),
+            year = year(date),
+            text = paste0(title, " ", body),
+            text_nchar = nchar(text),
+            url
+  ) %>%
+  arrange(date) %>%
+  # Remove duplicates based on URL
+  distinct(url, .keep_all = TRUE)
+
+digital_master <- digital
 
 

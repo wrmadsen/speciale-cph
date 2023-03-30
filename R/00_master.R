@@ -19,9 +19,9 @@ source("R/01_load_raw_data.R", verbose = TRUE)
 
 source("R/03_format_covariates.R")
 
-source("R/04_format_radio.R")
+source("R/04_format_radio_and_digital.R")
 
-source("R/04_format_twitter_keywords.R")
+#source("R/04_format_twitter_keywords.R")
 
 #source("R/04_find_twitter_users.R")
 
@@ -39,7 +39,7 @@ source("R/05_create_dfm_tokens.R")
 
 # Plot ----
 
-source("R/20_plot_descriptive.R")
+#source("R/20_plot_descriptive.R")
 
 source("R/21_plot_media_spikes.R")
 

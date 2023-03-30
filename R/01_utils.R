@@ -58,11 +58,12 @@ gold_speciale <- "#D4AF37"
 crimson_red <- "#DC143C"
 
 # Groups-specific
-colours_groups <- c("Radio Ndeke Luka" = greenm_speciale,
-                    "Radio Lengo Songo" = gold_speciale,
-                    "Reseau des journalistes" = bluel_speciale,
-                    "Non-Russian total" = grey_speciale,
-                    "Non-Russian average" = grey_speciale)
+colours_groups <- c("Ndjoni Sango" = red_speciale,
+                    "Radio Lengo Songo" = blued_speciale,
+                    "Radio Ndeke Luka" = greenl_speciale,
+                    "Reseau des journalistes" = greend_speciale,
+                    "Non-Russian total" = greenm_speciale,
+                    "Non-Russian average" = greenm_speciale)
 
 # Annotation size ----
 # when text size

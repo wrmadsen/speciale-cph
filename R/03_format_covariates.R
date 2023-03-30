@@ -62,6 +62,17 @@ feel <- feel_raw %>%
   )
 
 
+# Format Lock data -----
+lock <- lock_raw %>%
+  clean_names() %>%
+  transmute(date = as.Date(a_1_date), approach = b_1_study_approach_2, quant = grepl("1", approach))
+
+# Quant share
+lock %>%
+  group_by(quant) %>%
+  summarise(n = n())
+
+7/16
 
 
 

@@ -4,12 +4,12 @@ glimpse(master_tokens_tbl)
 
 # Run preliminary models ----
 # Fit
-stm_out <- stm(documents = master_dfm,
-               K = 15,
-               seed = 12345)
+# stm_out <- stm(documents = master_dfm,
+#                K = 15,
+#                seed = 12345)
 
 # Save model
-save(stm_out, file = "output/stm_out.Rdata")
+#save(stm_out, file = "output/stm_out.Rdata")
 load("output/stm_out.Rdata")
 
 # Plot stm
@@ -63,7 +63,7 @@ load("output/stm_out_prevalence_two.Rdata")
 # Check models ----
 
 # Model to check
-stm_to_check <- stm_out_prevalence_two
+stm_to_check <- stm_out_prevalence_one
 
 # Extract the matrix of words with highest frex scores
 topic_labels_matrix <- labelTopics(stm_to_check, n = 10)$frex
@@ -145,7 +145,7 @@ data_for_plot <- master_dt_thetas_long %>%
 data_for_plot %>%
   mutate(topic = gsub("(.{23})\\_(.*)", "\\1\n\\2", topic)) %>%
   filter(date > as.Date("2020-01-01")) %>%
-  filter(sub_group %in% c("Radio Lengo Songo", "Non-Russian total")) %>%
+  filter(sub_group %in% c("Radio Lengo Songo", "Ndjoni Sango", "Non-Russian total")) %>%
   ggplot(aes(x = date,
              y = topic_proportion)) +
   #geom_point(aes(colour = sub_group), alpha = 0.1) +
@@ -161,36 +161,36 @@ data_for_plot %>%
 
 #save_plot_speciale("output/topic_prop_mean_over_time.png", height = 23, width = 30)
 
-### Plot topics 6 and 13 ----
+### Plot topics 5 and 11 ----
 # Vertical lines
 vertical_lines <- bind_rows(tibble("date" = as.Date(c("2021-08-15", "2021-12-05", "2022-09-01"))) %>%
-                              mutate(topic = "Topic 06"),
+                              mutate(topic = "Topic 05"),
                             tibble("date" = as.Date(c("2021-07-01", "2022-08-01"))) %>%
-                              mutate(topic = "Topic 13")
+                              mutate(topic = "Topic 11")
 )
 
 # Plot prop per week
 data_for_plot %>%
   filter(date >= as.Date("2020-01-01")) %>%
-  filter(topic %in% c("Topic 06", "Topic 13")) %>%
+  filter(topic %in% c("Topic 05", "Topic 11")) %>%
   ggplot(aes(x = date,
              y = topic_proportion)) +
   geom_smooth(aes(colour = sub_group), se = FALSE, linewidth = 2) +
-  geom_vline(data = vertical_lines, linewidth = 1.5, colour = red_speciale, linetype = 2,
-             aes(xintercept = date)) +
+  #geom_vline(data = vertical_lines, linewidth = 1.5, colour = red_speciale, linetype = 2,
+  #           aes(xintercept = date)) +
   facet_wrap(~topic, scales = "free") +
   scale_colour_manual(name = "", values = colours_groups) +
   scale_x_date(labels = dateformat(), date_breaks = "6 months") +
-  labs(title = "Mean proportion of topics 6 and 13 per week",
+  labs(title = "Mean proportion of topics 5 and 11 per week",
        x = NULL,
        y = "Topic proportion, %",
        caption = "Source: William Rohde Madsen.") +
   theme_speciale
 
-#save_plot_speciale("output/topic_prop_mean_over_time_6_13.png")
+#save_plot_speciale("output/topic_prop_mean_over_time_specific.png")
 
 # Plot change per month
-# Topic 06
+# Topic 05
 data_for_plot_change <- data_for_plot %>%
   filter(date >= as.Date("2021-05-01")) %>%
   arrange(sub_group, topic, date) %>%
@@ -200,28 +200,28 @@ data_for_plot_change <- data_for_plot %>%
   ungroup()
 
 data_for_plot_change %>%
-  filter(topic %in% c("Topic 06")) %>%
+  filter(topic %in% c("Topic 05")) %>%
   ggplot(aes(x = date,
              y = change)) +
-  geom_smooth(aes(colour = sub_group)) +
+  geom_smooth(aes(colour = sub_group), se = FALSE) +
   #geom_col(aes(fill = sub_group)) +
   geom_vline(data = vertical_lines %>% filter(topic == "Topic 06"),
              linewidth = 1.5, colour = red_speciale, linetype = 2,
              aes(xintercept = date)) +
   facet_wrap(~sub_group, scales = "free") +
-  scale_fill_manual(name = "", values = colours_groups) +
+  scale_colour_manual(name = "", values = colours_groups) +
   scale_x_date(labels = dateformat(), date_breaks = "6 months") +
-  labs(title = "Change in proportion of topic 6 per week",
+  labs(title = "Change in proportion of topic 5 per week",
        x = NULL,
        y = "Change in proportion, %",
        caption = "Source: William Rohde Madsen.") +
   theme_speciale
 
-save_plot_speciale("output/topic_prop_change_over_time_6.png")
+save_plot_speciale("output/topic_prop_change_over_time_first.png")
 
-# Topic 13
+# Topic 11
 data_for_plot_change %>%
-  filter(topic %in% c("Topic 13")) %>%
+  filter(topic %in% c("Topic 11")) %>%
   ggplot(aes(x = date,
              y = change_rel)) +
   geom_col(aes(fill = sub_group)) +
@@ -379,7 +379,7 @@ calculate_diff_in_spike_period <- function(spike_period = 1){
   
   
   
-  # Topic correlations network ----
+  ## Topic correlations network ----
   set.seed(381)
   
   mod_out_corr <- topicCorr(stm_to_check_theta)

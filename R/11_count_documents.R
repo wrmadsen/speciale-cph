@@ -1,6 +1,9 @@
 # Count documents over time
 
 # Create count object ----
+# Count unique documents
+master_text %>% distinct(text)
+
 # Count
 count_docs <- master_dt %>%
   select(-date) %>%
@@ -10,13 +13,13 @@ count_docs <- master_dt %>%
   ungroup()
 
 # Add "total" rows to
-count_docs <- count_docs %>%
-  filter(sub_group != "Radio Lengo Songo") %>%
-  mutate(sub_group = "Non-Russian total") %>%
-  group_by(group, sub_group, date) %>%
-  summarise(n = sum(n)) %>%
-  ungroup() %>%
-  bind_rows(count_docs)
+# count_docs <- count_docs %>%
+#   filter(sub_group != "Radio Lengo Songo") %>%
+#   mutate(sub_group = "Non-Russian total") %>%
+#   group_by(group, sub_group, date) %>%
+#   summarise(n = sum(n)) %>%
+#   ungroup() %>%
+#   bind_rows(count_docs)
 
 # Create rolling average
 n_for_roll <- 4
@@ -51,7 +54,15 @@ spike_periods <- tibble("spike_no" = c(1:6),
                                    "3RD: Rebels impose demands and then leave dialogue.",
                                    "4TH:\nRussia invades Ukraine.",
                                    "5TH: Project Sango, 'bloc republicain', constitutional reform, Darlan fired, and US diplomacy.",
-                                   "6TH: US diplomacy and treasury crisis.")) %>%
+                                   "6TH: US diplomacy and treasury crisis."),
+                        "text_2" = c("Touadéra wins election.",
+                                     "Republican Dialogue.",
+                                     "Rebels leave Dialogue.",
+                                     "Russia invades Ukraine.",
+                                     "Judge Darlan fired.",
+                                     "US influence."
+                        )) %>%
+  filter(spike_no %in% c(1, 2, 4, 5)) %>%
   mutate(date_middle = as.Date((as.numeric(date_max) + as.numeric(date_min))/2, origin = '1970-01-01'))
 
 # Save spike periods object
@@ -64,10 +75,10 @@ count_docs %>%
   filter(date >= as.Date("2020-01-01")) %>%
   ggplot() +
   geom_line(aes(x = date,
-                y = n_roll_index, colour = sub_group), linewidth = 2) +
-  geom_smooth(aes(x = date,
-                  y = n_roll_index,
-                  colour = sub_group), se = FALSE, linetype = 2) +
+                y = n_roll_index, colour = sub_group), linewidth = 1.5) +
+  # geom_smooth(aes(x = date,
+  #                 y = n_roll_index,
+  #                 colour = sub_group), se = FALSE, linetype = 2) +
   geom_rect(data = spike_periods,
             aes(xmin = date_min,
                 xmax = date_max,
@@ -78,19 +89,27 @@ count_docs %>%
   geom_text(data = spike_periods,
             aes(x = date_middle,
                 y = 460,
-                label = stringr::str_wrap(text, 12)),
+                label = stringr::str_wrap(text_2, 12)),
             family = theme_font,
             size = 6) +
+  # geom_label_repel(data = count_docs %>% filter(date == as.Date("2023-01-30")),
+  #                  aes(x = date,
+  #                      y = n_roll_index,
+  #                      colour = sub_group,
+  #                      label = sub_group),
+  #                  family = theme_font,
+  #                  size = 6) +
   scale_colour_manual(name = "", values = colours_groups) +
   scale_x_date(labels = dateformat(), date_breaks = "4 months") +
-  labs(title = "Index of number of documents over time for CAR media outlets (100 = April 2020)",
-       subtitle = "Index. Central African Republic media outlets.",
-       y = "Index",
+  #scale_y_continuous(limits = c(0, 600)) +
+  labs(title = "Number of documents over time for CAR media outlets (100 = April 2020)",
+       subtitle = "Rolling average index. Central African Republic media outlets.",
+       y = NULL,
        x = NULL,
        caption = "Source: William Rohde Madsen.") +
   theme_speciale
 
-save_plot_speciale("output/n_docs_per_week.png")
+save_plot_speciale("output/figure_n_docs_per_week_labelled.png")
 
 
 ## Read text related to spikes ----
