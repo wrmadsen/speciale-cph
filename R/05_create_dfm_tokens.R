@@ -1,39 +1,6 @@
-# Create tokens from Twitter master dataset
+# Create tokens from text
 
 # Create functions ----
-## Remove patterns and URLs
-remove_patterns_in_post <- function(input){
-  
-  # Special characters
-  # And l'
-  random <- c("@", "#", "\\.", "\\,", ":", ";",
-              "\\/", "\\(", "\\)",
-              #"[^\x01-\x7F]", # remove all non-ASCII, emojis
-              '"', "\\'",
-              "\\!", "\\?", "・",
-              "l'", "L'")
-  
-  # Quotes
-  quotes <- c("['‘’”“]")
-  
-  # http, URLs
-  urls <- c("http.*", "https.*")
-  
-  # Numbers, digits
-  digits <- c("[0-9]+")
-  
-  # Combine those that are to be removed completely
-  remove_completely <- c(random, digits, quotes, urls) %>% paste0(., collapse = "|")
-  
-  # Replace some with space
-  replace_w_spaces <- paste("\\_", "\\-", sep = "|")
-  
-  # Remove and replace
-  input %>%
-    gsub(remove_completely, "", .) %>%
-    gsub(replace_w_spaces, " ", .)
-  
-}
 
 # Strings to recode and avoid stemming ----
 # Only those with more than one word included here
@@ -333,9 +300,13 @@ convert_dfm_to_tibble <- function(dfm, dt){
 }
 
 # Format before running functions ----
-# Combine Twitter and radio ----
-#master_text <- bind_rows(twitter_master, radio_master)
-master_text <- bind_rows(radio_master, digital_master)
+# Bind digital and radio ----
+# And add political orientation variable
+russian_outlets <- c("Radio Lengo Songo", "Ndjoni Sango")
+
+master_text <- bind_rows(radio_master, digital_master) %>%
+  mutate(orient = if_else(sub_group %in% russian_outlets, "Pro-Russia", "Other")) %>%
+  select(orient, everything())
 
 # Join spikes periods
 master_text <-master_text %>%
@@ -343,13 +314,12 @@ master_text <-master_text %>%
   mutate(spike_no = if_else(is.na(spike_no), 0, spike_no), 
          spike_binary = if_else(spike_no > 0, 1, 0) %>% as.factor)
 
-# Add and bind non-Russian category
-russian_outlets <- c("Radio Lengo Songo", "Ndjoni Sango")
-
-master_text <- master_text %>%
-  filter(!sub_group %in% russian_outlets) %>%
-  mutate(sub_group = "Non-Russian total",
-         group = "Non-Russian total") %>%
+master_text <- bind_rows(master_text %>%
+                           filter(orient != "Pro-Russia") %>%
+                           mutate(sub_group = "Non-Russian total"),
+                         master_text %>%
+                           filter(orient == "Pro-Russia") %>%
+                           mutate(sub_group = "Pro-Russian total")) %>%
   bind_rows(master_text)
 
 # Run functions ----
@@ -377,14 +347,16 @@ master_dfm <- master_tokens %>%
 master_dfm_tf_idf <- master_dfm %>%
   dfm_tfidf()
 
-topfeatures(master_dfm, n = 10)
-
 master_tokens_tbl <- master_dfm %>%
   convert_dfm_to_tibble(., master_dt) %>%
   filter(nchar(token) > 1)
 
+
 # Print or view ----
-# Print tokens with highest counts
+
+topfeatures(master_dfm, n = 10)
+
+topfeatures(master_dfm_tf_idf, n = 10)
 
 master_tokens_tbl %>%
   group_by(token) %>%
