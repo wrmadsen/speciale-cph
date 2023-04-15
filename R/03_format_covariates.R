@@ -56,10 +56,17 @@ gadm_simp <- gadm_simp %>%
 
 # Remove accents and stem
 feel <- feel_raw %>%
-  transmute(word = remove_accents(word),
+  transmute(text = remove_accents(word),
+            text = remove_patterns_in_post(word),
             score = case_when(polarity == "positive" ~ 1,
                               polarity == "negative" ~ -1)
-  )
+  ) %>%
+  filter(!grepl("\\s", text))
+
+# Stem words
+feel <- feel %>%
+  mutate(text = char_wordstem(text, language = "fr"),
+         text = stri_trans_general(str = text, id = "Latin-ASCII"))
 
 
 # Format Lock data -----
@@ -71,9 +78,6 @@ lock <- lock_raw %>%
 lock %>%
   group_by(quant) %>%
   summarise(n = n())
-
-7/16
-
 
 
 
