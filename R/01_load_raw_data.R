@@ -41,18 +41,18 @@ spike_periods <- read_csv("output/spike_periods.csv")
 
 # Twitter data ----
 # By keywords
-read_bind_twitter <- function(files){
-  
-  id <- gsub("data\\-raw\\/Twitter\\/twitter_keyword\\_|\\.csv|_.+", "", files)
-  
-  read_csv(files) %>%
-    clean_names() %>%
-    mutate(id = id)
-  
-}
-
-twitter_keywords_raw <- list.files(pattern = "twitter_keyword_.+\\.csv", recursive = TRUE) %>%
-  map_df(read_bind_twitter)
+# read_bind_twitter <- function(files){
+#   
+#   id <- gsub("data\\-raw\\/Twitter\\/twitter_keyword\\_|\\.csv|_.+", "", files)
+#   
+#   read_csv(files) %>%
+#     clean_names() %>%
+#     mutate(id = id)
+#   
+# }
+# 
+# twitter_keywords_raw <- list.files(pattern = "twitter_keyword_.+\\.csv", recursive = TRUE) %>%
+#   map_df(read_bind_twitter)
 
 # By user
 
