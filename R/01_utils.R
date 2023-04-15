@@ -24,6 +24,41 @@ remove_accents <- function(input){
   
 }
 
+## Remove patterns and URLs
+remove_patterns_in_post <- function(input){
+  
+  # Special characters
+  # And l'
+  random <- c("@", "#", "\\.", "\\,", ":", ";",
+              "\\/", "\\(", "\\)",
+              #"[^\x01-\x7F]", # remove all non-ASCII, emojis
+              '"', "\\'",
+              "\\!", "\\?", "・",
+              "l'", "L'", "L’", "l’",
+              "d'", "D'", "D’", "d’")
+  
+  # Quotes
+  quotes <- c("['‘’”“]")
+  
+  # http, URLs
+  urls <- c("http.*", "https.*")
+  
+  # Numbers, digits
+  digits <- c("[0-9]+")
+  
+  # Combine those that are to be removed completely
+  remove_completely <- c(random, digits, quotes, urls) %>% paste0(., collapse = "|")
+  
+  # Replace some with space
+  replace_w_spaces <- paste("\\_", "\\-", sep = "|")
+  
+  # Remove and replace
+  input %>%
+    gsub(remove_completely, "", .) %>%
+    gsub(replace_w_spaces, " ", .)
+  
+}
+
 
 # Theme -----
 # speciale theme
@@ -58,12 +93,15 @@ gold_speciale <- "#D4AF37"
 crimson_red <- "#DC143C"
 
 # Groups-specific
-colours_groups <- c("Ndjoni Sango" = red_speciale,
+colours_groups <- c("Ndjoni Sango" = "red2",
                     "Radio Lengo Songo" = blued_speciale,
                     "Radio Ndeke Luka" = greenl_speciale,
                     "Reseau des journalistes" = greend_speciale,
                     "Non-Russian total" = greenm_speciale,
-                    "Non-Russian average" = greenm_speciale)
+                    "Non-Russian average" = greenm_speciale,
+                    "Pro-Russian total" = red_speciale,
+                    "Pro-Russia" = red_speciale,
+                    "Other" = greenm_speciale)
 
 # Annotation size ----
 # when text size
