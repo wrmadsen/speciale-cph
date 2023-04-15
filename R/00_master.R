@@ -13,21 +13,20 @@ source("R/01_load_raw_data.R", verbose = TRUE)
 
 #source("R/02_scrape_radio_lengo.R")
 
-#source("R/03_data_to_get_twitter_keywords.R")
-
 # Format data ----
 
 source("R/03_format_covariates.R")
 
 source("R/04_format_radio_and_digital.R")
 
-#source("R/04_format_twitter_keywords.R")
-
-#source("R/04_find_twitter_users.R")
-
 source("R/05_create_dfm_tokens.R")
 
+# Save formatted data ----
+objects_to_save <- list(master_dfm_tf_idf, master_dfm, master_tokens, master_tokens_tbl, feel, token_frequency)
+#save(objects_to_save, file = "data-formatted/formatted_data.RData")
+
 # Calculations and analysis ----
+load("data-formatted/formatted_data.RData")
 
 #source("R/07_calculate_similarity.R")
 
