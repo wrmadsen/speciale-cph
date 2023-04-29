@@ -98,11 +98,11 @@ pro_russia_0 <- senti_0 %>%
 
 senti_for_model_0 <- senti_0 %>%
   filter(orient == "Other") %>%
-  # Create lag per subgroup
-  group_by(sub_group) %>%
-  arrange(sub_group, month) %>%
-  mutate(score_0 = lead(score_0, 1)) %>%
-  ungroup() %>%
+  # # Create lag per subgroup
+  # group_by(sub_group) %>%
+  # arrange(sub_group, month) %>%
+  # mutate(score_0 = lead(score_0, 1)) %>%
+  # ungroup() %>%
   left_join(pro_russia_0) %>%
   mutate(difference = score_pro_russia - score_0)
 
@@ -114,11 +114,11 @@ pro_russia_1 <- senti_1 %>%
 
 senti_for_model_1 <- senti_1 %>%
   filter(orient == "Other") %>%
-  # Create lag per subgroup
-  group_by(sub_group) %>%
-  arrange(sub_group, month) %>%
-  mutate(score_russ = lead(score_1, 1)) %>%
-  ungroup() %>%
+  # # Create lag per subgroup
+  # group_by(sub_group) %>%
+  # arrange(sub_group, month) %>%
+  # mutate(score_russ = lead(score_1, 1)) %>%
+  # ungroup() %>%
   left_join(pro_russia_1) %>%
   mutate(difference = score_pro_russia - score_1)
 
