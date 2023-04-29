@@ -72,8 +72,14 @@ feel_raw <- read_delim("data-raw/Sentiment/FEEL.csv", delim = ";")
 lock_raw <- read_excel("data-raw/Andet/I.Lock_DATASET_Systematic Review Organizational Propaganda_PRI.xlsx")
 
 
+# Oligarchs data ----
+# WID inequality data
+# https://wid.world/data/
+# http://gabriel-zucman.eu/russia/
+forbes_raw <- read_excel("data-raw/Oligarchs/NPZ2017MainFiguresTables.xlsx",
+                         sheet = "DataSeriesWealth", range = "A6:CA44")
 
 
-
-
+# Conflicts data -----
+acled_raw <- read_csv("data-raw/Konflikter/2020-04-22-2023-05-31-Central_African_Republic.csv")
 
