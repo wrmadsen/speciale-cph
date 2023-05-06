@@ -80,5 +80,45 @@ lock %>%
   summarise(n = n())
 
 
+# Format ACLED -----
+acled_raw %>% glimpse()
+acled_raw %>% distinct(admin1)
+acled_raw %>% group_by(actor1) %>% summarise(n = n()) %>% arrange(-n)
+acled_raw %>% group_by(actor2) %>% summarise(n = n()) %>% arrange(-n)
+
+northern_regions <- c("Vakaga", "Bamingui-Bangoran", "Haute-Kotto", "Haut-Mbomou", "Mbomou",
+                      "Basse-Kotto", "Ouaka", "Kemo", "Nana-Grebizi")
+
+actor_to_subset <- c("Military Forces of the Central African Republic (2016-)|Wagner Group|CPC: Coalition of Patriots for Change")
+
+# Format
+acled <- acled_raw %>%
+  filter(country == "Central African Republic") %>%
+  transmute(date = as.Date(event_date, "%d %b %Y"),
+            month = floor_date(date, unit = "month"),
+            quarter = floor_date(date, unit = "quarter"),
+            halfyear = floor_date(date, "halfyear"),
+            year,
+            region = admin1, longitude, latitude, fatalities, actor1, actor2) %>%
+  arrange(date) %>%
+  #filter(grepl(actor_to_subset, actor1) | grepl(actor_to_subset, actor2)) %>%
+  filter(year >= 2019) %>%
+  #filter(fatalities > 0) %>%
+  mutate(north = if_else(region %in% northern_regions, "North", "South"))
+
+# Format mines ----
+# Bind carbon, diamonds, and gold mine coordinates together
+car_mines <- bind_rows(car_mines_carbon_raw %>% mutate(id = "Hydrocarbon"),
+                       car_mines_diamonds_raw %>% mutate(id = "Diamonds"),
+                       car_mines_gold_raw %>% mutate(id = "Gold"))
+
+
+# Format production gold and diamonds ----
+production <- production_raw %>%
+  pivot_longer(cols = c(2:ncol(.)), names_to = "year")
+
+
+
+
 
 
