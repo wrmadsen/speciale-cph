@@ -1,5 +1,16 @@
 # Utils
 
+# Specific events ----
+specific_events <- tibble("date" = as.Date(c("2020-12-27",
+                                             "2021-03-15", # circa
+                                             "2021-11-15", # circa
+                                             "2022-02-24")),
+                          "text" = c("Touadéra wins election.",
+                                     "Republican Dialogue initiated.",
+                                     "Opposition leave Dialogue.",
+                                     "Russia invades Ukraine."
+                          ))
+
 # Various functions ----
 # Map df function with a progress bar
 map_df_progress <- function(.x, .f, ..., .id = NULL) {
@@ -60,9 +71,6 @@ remove_patterns_in_post <- function(input){
 }
 
 
-# Theme -----
-# speciale theme
-
 # Date labels ----
 dateformat <- function(){
   function(x)
@@ -116,10 +124,10 @@ theme_font <- "Garamond"
 
 # Theme -----
 theme_speciale <- theme(axis.text = element_text(size = unit(text_size, "mm"),
-                                            family = theme_font, colour = "black"),
-                   axis.title = element_text(size = unit(text_size, "mm"), family = theme_font),
-                   #axis.title.y = element_blank(),
-                   axis.ticks = element_blank()) +
+                                                 family = theme_font, colour = "black"),
+                        axis.title = element_text(size = unit(text_size, "mm"), family = theme_font),
+                        #axis.title.y = element_blank(),
+                        axis.ticks = element_blank()) +
   theme(plot.title = element_text(size = unit(text_size*1.5, "mm"), family = theme_font),
         plot.subtitle = element_text(size = unit(text_size, "mm"), family = theme_font),
         plot.caption=element_text(size = unit(text_size, "mm"), family = theme_font)) +
@@ -133,6 +141,21 @@ theme_speciale <- theme(axis.text = element_text(size = unit(text_size, "mm"),
         legend.key = element_blank()) +
   theme(strip.text = element_text(family = theme_font, size = unit(text_size, "mm")),
         strip.background = element_rect(fill = "white"))
+
+
+# Table theme ----
+# flextable
+set_flextable_defaults(
+  font.size = 14,
+  theme_fun = theme_alafoli, #theme_booktabs,
+  font.family = theme_font,
+  cwidth = 1.2,
+  cheight = 0.5,
+  padding = 0,
+  layout = "autofit",
+  width = 0.8,
+  background.color = "white")
+
 
 # Save function ----
 save_plot_speciale <- function(name, width = 28.6, height = 17.9){
