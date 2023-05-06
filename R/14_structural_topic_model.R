@@ -36,6 +36,47 @@ master_dt %>%
   theme_speciale
 
 # Run model with covariates ----
+## Fit multiple models to find optimal K ----
+#plan(sequential) # same as multiprocess
+#plan(multisession)
+
+plan(sequential, workers = 4)
+
+values_of_k <- data_frame(K = c(20, 40, 60))
+
+values_of_k <- c(20, 40, 60)
+
+with_progress({
+  
+  p <- progressor(steps = length(values_of_k))
+  
+  many_models_one <- future_map(values_of_k,
+                                ~stm(documents = master_dfm,
+                                    K = .,
+                                    #prevalence = ~sub_group,
+                                    seed = 12345),
+                                p = p)
+  
+})
+
+with_progress({
+  
+  p <- progressor(steps = nrow(ks_to_check))
+  
+  many_models_one <- ks_to_check %>%
+    mutate(topic_model = future_map(K,
+                                    ~stm(documents = master_dfm,
+                                         K = .,
+                                         #prevalence = ~sub_group,
+                                         seed = 12345),
+                                    p = p)
+    )
+})
+
+# Save models
+save(many_models_one, file = "output/many_models_one.Rdata")
+load("output/many_models_one.Rdata")
+
 ## Fit model one -----
 docvars(master_dfm) %>% names
 
@@ -49,16 +90,16 @@ save(stm_out_prevalence_one, file = "output/stm_out_prevalence_one.Rdata")
 load("output/stm_out_prevalence_one.Rdata")
 
 ## Fit model two -----
-docvars(master_dfm) %>% names
-
-stm_out_prevalence_two <- stm(documents = master_dfm,
-                              prevalence = ~sub_group*spike_binary,
-                              K = 15,
-                              seed = 12345)
-
-# Save model
-save(stm_out_prevalence_two, file = "output/stm_out_prevalence_two.Rdata")
-load("output/stm_out_prevalence_two.Rdata")
+# docvars(master_dfm) %>% names
+# 
+# stm_out_prevalence_two <- stm(documents = master_dfm,
+#                               prevalence = ~sub_group*spike_binary,
+#                               K = 15,
+#                               seed = 12345)
+# 
+# # Save model
+# save(stm_out_prevalence_two, file = "output/stm_out_prevalence_two.Rdata")
+# load("output/stm_out_prevalence_two.Rdata")
 
 # Check models ----
 
@@ -99,27 +140,33 @@ master_dt_thetas_long %>%
   summarise(topic_proportion = mean(topic_proportion)) %>%
   ungroup() %>%
   mutate(topic_labels_space) %>%
-  transmute(Topic = topic, `Proportion (%)` = topic_proportion*100,
-            `Common words` = topic_labels_space) %>%
-  # To table
-  gt::gt() %>%
-  gt::tab_header(title = "Topics identified by structural topic model (STM)") %>%
-  gt::fmt_number(columns = `Proportion (%)`,
-                 decimals = 2) %>%
-  gt::gtsave("output/table_topic_proportion.png")
+  transmute(Topic = topic,
+            topic_proportion = topic_proportion*100,
+            topic_proportion = round(topic_proportion, 2),
+            topic_labels_space) %>%
+  # To flextable
+  flextable() %>%
+  width(., width = 1.1) %>%
+  width(., j = "topic_labels_space", width = 4.8) %>%
+  #border_inner_h(.) %>%
+  set_header_labels(.,
+                    topic = "Topic",
+                    topic_proportion = "Proportion (%)",
+                    topic_labels_space = "Common words") %>%
+  save_as_docx(path = "output-tables/master_dt_thetas_long.docx")
 
 ### Topic proportion total by group ----
 # Calculate 
 data_for_plot <- master_dt_thetas_long %>%
   group_by(sub_group, topic) %>%
-  summarise(topic_proportion = mean(topic_proportion)) %>%
+  summarise(topic_proportion = mean(topic_proportion)*100) %>%
   ungroup()
 
 # Plot
 data_for_plot %>%
   mutate(colour_of_bars = if_else(topic %in% c("Topic 13"), 1, 0) %>% as.factor) %>%
   #mutate(name = gsub("(.{23})\\_(.*)", "\\1\n\\2", name)) %>%
-  #filter(sub_group %in% c("Radio Lengo Songo", "Non-Russian total")) %>%
+  filter(!sub_group %in% c("Non-Russian total", "Pro-Russian total")) %>%
   ggplot(aes(x = topic_proportion,
              y = sub_group)) +
   geom_col(aes(fill = sub_group)) +
@@ -131,7 +178,7 @@ data_for_plot %>%
        caption = "Source: William Rohde Madsen.") +
   theme_speciale
 
-save_plot_speciale("output/topic_prop_mean_by_group.png", height = 23, width = 30)
+save_plot_speciale("output-figures/topic_prop_mean_by_group.png", height = 23, width = 30)
 
 ### Topic proportion over time by group ----
 # Calculate
@@ -145,7 +192,7 @@ data_for_plot <- master_dt_thetas_long %>%
 data_for_plot %>%
   mutate(topic = gsub("(.{23})\\_(.*)", "\\1\n\\2", topic)) %>%
   filter(date > as.Date("2020-01-01")) %>%
-  filter(sub_group %in% c("Radio Lengo Songo", "Ndjoni Sango", "Non-Russian total")) %>%
+  filter(!sub_group %in% c("Pro-Russian total", "Non-Russian total")) %>%
   ggplot(aes(x = date,
              y = topic_proportion)) +
   #geom_point(aes(colour = sub_group), alpha = 0.1) +
@@ -159,7 +206,7 @@ data_for_plot %>%
        caption = "Source: William Rohde Madsen.") +
   theme_speciale
 
-#save_plot_speciale("output/topic_prop_mean_over_time.png", height = 23, width = 30)
+save_plot_speciale("output-figures/topic_prop_mean_over_time.png", height = 23, width = 30)
 
 ### Plot topics 5 and 11 ----
 # Vertical lines
@@ -187,7 +234,7 @@ data_for_plot %>%
        caption = "Source: William Rohde Madsen.") +
   theme_speciale
 
-#save_plot_speciale("output/topic_prop_mean_over_time_specific.png")
+#save_plot_speciale("output-figures/topic_prop_mean_over_time_specific.png")
 
 # Plot change per month
 # Topic 05
@@ -237,8 +284,7 @@ data_for_plot_change %>%
        caption = "Source: William Rohde Madsen.") +
   theme_speciale
 
-save_plot_speciale("output/topic_prop_change_over_time_13.png")
-
+save_plot_speciale("output-figures/topic_prop_change_over_time_13.png")
 
 
 
@@ -262,7 +308,7 @@ data_for_plot %>%
        caption = "Source: William Rohde Madsen.") +
   theme_speciale
 
-save_plot_speciale("output/change_in_prop_spike_binary.png", height = 23, width = 30)
+save_plot_speciale("output-figures/change_in_prop_spike_binary.png", height = 23, width = 30)
 
 # Collapse the words for each topic into a single label
 topic_labels <- apply(topic_labels_matrix, 1, paste0, collapse = "_") %>%
@@ -319,7 +365,7 @@ effects_int_tibble %>%
        caption = "Source: William Rohde Madsen.") +
   theme_speciale
 
-save_plot_speciale("output/diff_in_effect_spike_binary.png")
+save_plot_speciale("output-figures/diff_in_effect_spike_binary.png")
 
 ### Plot interaction effect between specific spike period and sub_group ----
 calculate_diff_in_spike_period <- function(spike_period = 1){
@@ -343,77 +389,76 @@ calculate_diff_in_spike_period <- function(spike_period = 1){
     select(sub_group = value, prop = proportion, topic_name, moderator)
   
 }
-  
-  # Pivot wide to calculate difference
-  effects_int_tibble <- effects_int_tibble %>%
-    mutate(moderator = paste0("binary_", moderator)) %>%
-    pivot_wider(names_from = moderator, values_from = prop) %>%
-    mutate(difference = binary_1 - binary_0)
-  
-  # Plot
-  effects_int_tibble %>%
-    ggplot(.,
-           aes(x = difference,
-               y = sub_group)) +
-    geom_col(aes(fill = sub_group)) +
-    facet_wrap(~topic_name) +
-    scale_fill_manual(name = "", values = colours_groups) +
-    labs(title = "Difference in effect of spike period",
-         x = NULL,
-         caption = "Source: William Rohde Madsen.") +
-    theme_speciale
-  
-  save_plot_speciale("output/diff_in_effect_spike_binary.png")
-  
-  
-  
-  ### Calculate probability of each word by topic ----
-  # Using tidytext?
-  # library(tidytext)
-  stm_to_check_theta %>% tidy()
-  
-  td_gamma <- tidy(stm_to_check_theta, matrix = "gamma",
-                   document_names = rownames(out$meta))
-  
-  td_gamma
-  
-  
-  
-  ## Topic correlations network ----
-  set.seed(381)
-  
-  mod_out_corr <- topicCorr(stm_to_check_theta)
-  
-  plot(mod_out_corr, vlabels = topic_labels)
-  
-  # extract network
-  library(stminsights)
-  
-  stm_corrs <- stminsights::get_network(model = stm_to_check_theta,
-                                        method = "simple",
-                                        labels = topic_labels,
-                                        cutoff = 0.001,
-                                        cutiso = TRUE)
-  
-  # plot network with ggraph
-  ggraph(stm_corrs, layout = "fr") +
-    geom_edge_link(aes(edge_width = weight),
-                   label_colour = orange_speciale,
-                   edge_colour = bluel_speciale) +
-    geom_node_point(size = 4, colour = black_speciale)  +
-    geom_node_label(aes(label = name, size = props),
-                    colour = black_speciale,  repel = TRUE, alpha = 0.85) +
-    scale_size(range = c(3, 7), labels = scales::percent) +
-    scale_edge_width(range = c(1, 3)) +
-    labs(title = "Network and correlations of topics in structural topic model",
-         subtitle = NULL,
-         x = NULL,
-         y = NULL,
-         size = "Topic Proportion",  edge_width = "Topic Correlation") + 
-    theme_speciale +
-    theme(panel.grid.major = element_blank())
-  
-  
-  
-  
-  
+
+# Pivot wide to calculate difference
+effects_int_tibble <- effects_int_tibble %>%
+  mutate(moderator = paste0("binary_", moderator)) %>%
+  pivot_wider(names_from = moderator, values_from = prop) %>%
+  mutate(difference = binary_1 - binary_0)
+
+# Plot
+effects_int_tibble %>%
+  ggplot(.,
+         aes(x = difference,
+             y = sub_group)) +
+  geom_col(aes(fill = sub_group)) +
+  facet_wrap(~topic_name) +
+  scale_fill_manual(name = "", values = colours_groups) +
+  labs(title = "Difference in effect of spike period",
+       x = NULL,
+       caption = "Source: William Rohde Madsen.") +
+  theme_speciale
+
+save_plot_speciale("output-figures/diff_in_effect_spike_binary.png")
+
+
+
+### Calculate probability of each word by topic ----
+# Using tidytext?
+# library(tidytext)
+stm_to_check_theta %>% tidy()
+
+td_gamma <- tidy(stm_to_check_theta, matrix = "gamma",
+                 document_names = rownames(out$meta))
+
+td_gamma
+
+
+
+## Topic correlations network ----
+set.seed(381)
+
+mod_out_corr <- topicCorr(stm_to_check_theta)
+
+plot(mod_out_corr, vlabels = topic_labels)
+
+# extract network
+library(stminsights)
+
+stm_corrs <- stminsights::get_network(model = stm_to_check_theta,
+                                      method = "simple",
+                                      labels = topic_labels,
+                                      cutoff = 0.001,
+                                      cutiso = TRUE)
+
+# plot network with ggraph
+ggraph(stm_corrs, layout = "fr") +
+  geom_edge_link(aes(edge_width = weight),
+                 label_colour = orange_speciale,
+                 edge_colour = bluel_speciale) +
+  geom_node_point(size = 4, colour = black_speciale)  +
+  geom_node_label(aes(label = name, size = props),
+                  colour = black_speciale,  repel = TRUE, alpha = 0.85) +
+  scale_size(range = c(3, 7), labels = scales::percent) +
+  scale_edge_width(range = c(1, 3)) +
+  labs(title = "Network and correlations of topics in structural topic model",
+       subtitle = NULL,
+       x = NULL,
+       y = NULL,
+       size = "Topic Proportion",  edge_width = "Topic Correlation") + 
+  theme_speciale +
+  theme(panel.grid.major = element_blank())
+
+
+
+
