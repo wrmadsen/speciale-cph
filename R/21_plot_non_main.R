@@ -25,56 +25,64 @@ save_plot_speciale("output/forbes_billionaries.png")
 
 
 
-# Conflicts over time -----
-acled_raw %>% glimpse()
-acled_raw %>% distinct(admin1)
-acled_raw %>% group_by(actor1) %>% summarise(n = n()) %>% arrange(-n)
-acled_raw %>% group_by(actor2) %>% summarise(n = n()) %>% arrange(-n)
+# ACLED conflicts data  -----
 
-
-
-northern_regions <- c("Vakaga", "Bamingui-Bangoran", "Haute-Kotto", "Haut-Mbomou", "Mbomou",
-                      "Basse-Kotto", "Ouaka", "Kemo", "Nana-Grebizi")
-
-actor_to_subset <- c("Military Forces of the Central African Republic (2016-)|Wagner Group|CPC: Coalition of Patriots for Change")
-
-acled <- acled_raw %>%
-  transmute(date = as.Date(event_date, "%d %b %Y"),
-            month = floor_date(date, unit = "month"),
-            quarter = floor_date(date, unit = "quarter"),
-            halfyear = floor_date(date, "halfyear"),
-            year,
-            region = admin1, longitude, latitude, fatalities, actor1, actor2) %>%
-  mutate(north = if_else(region %in% northern_regions, "North", "South"))
-
-acled <- acled %>%
-  #filter(fatalities > 0) %>%
-  filter(grepl(actor_to_subset, actor1) | grepl(actor_to_subset, actor2))
-
+# Plot number of conflicts per month
 acled %>%
   #bind_rows(acled %>% mutate(region = "Total", north = "Total")) %>%
-  group_by(region, north, month) %>%
+  group_by(month) %>%
   summarise(n = n()) %>%
+  mutate(n_roll = RcppRoll::roll_mean(n, 3, fill = NA, na.rm = TRUE)) %>%
   ggplot(.,
          aes(x = month,
-             y = n)) +
-  geom_line(aes(group = region, colour = north)) +
-  facet_wrap(~region) +
+             y = n_roll)) +
+  geom_point(aes(y = n)) +
+  geom_line(colour = red_speciale, size = 2) +
+  #geom_vline(xintercept = specific_events$date) +
   theme_speciale +
-  labs(title = "Number of conflict events",
+  theme(panel.grid.major.x = element_blank()) +
+  labs(title = "Number of conflicts per month in the CAR since 2019",
+       subtitle = "3-month rolling average.",
        x = NULL,
        y = "Number per month",
        caption = "Source: ACLED.")
 
 save_plot_speciale("output/conflicts_per_month.png")
 
+# Plot Wagner's number of conflicts OVERALL
+acled %>%
+  filter(actor1 == "Wagner Group" | actor2 == "Wagner Group") %>%
+  mutate(group = "Wagner Group") %>%
+  bind_rows(acled %>% mutate(group = "Total")) %>%
+  group_by(group, month) %>%
+  summarise(n = n()) %>%
+  group_by(group) %>%
+  mutate(n_roll = RcppRoll::roll_mean(n, 3, fill = NA, na.rm = TRUE)) %>%
+  ggplot(.,
+         aes(x = month)) +
+  geom_point(aes(y = n, colour = group)) +
+  geom_line(aes(y = n_roll,
+                colour = group), size = 2) +
+  theme_speciale +
+  theme(panel.grid.major.x = element_blank()) +
+  scale_colour_manual(name = "",
+                      values = c("Total" = red_speciale,
+                                 "Wagner Group" = blued_speciale)) +
+  labs(title = "Number of conflicts per month associated with the Wagner Group in the CAR since 2010",
+       subtitle = "3-month rolling average.",
+       x = NULL,
+       y = "Number per month",
+       caption = "Source: ACLED.")
+
+save_plot_speciale("output/conflicts_per_month_wagner.png")
+
+# Difference between Wagner and total
+
 # Map
 
 # Turn into sf object
 acled_sf <- acled %>%
   st_as_sf(., coords = c("longitude", "latitude"), crs = 4326)
-
-mines_and_points <- 
 
 # Plot with points
 ggplot() +
@@ -83,12 +91,22 @@ ggplot() +
   geom_sf(data = gadm_simp,
           colour = "black", fill = NA) +
   geom_sf(data = acled_sf,
-          colour = "red", size = 0.3) +
+          colour = "darkred", size = 0.3) +
   facet_wrap(~year) +
   geom_point(data = gadm_simp, aes(x = 20.73, y = 6.19), colour = "lightblue", size = 2, text = "DDD") + # Ndassima
   geom_point(data = gadm_simp, aes(x = 22.3949, y = 8.0706), colour = "lightblue", size = 2, text = "DDD") + # Damane killed
   geom_point(data = gadm_simp, aes(x = 18.5582, y = 4.3947), colour = "darkblue", size = 2, text = "DDD") + # Bangui +
-  labs(title = "Conflicts mapped in CAR")
+  labs(title = "Conflicts across CAR per year since 2019",
+       subtitle = NULL,
+       y = NULL,
+       x = NULL,
+       caption = "Source: William Rohde Madsen.") +
+  theme_speciale +
+  theme(panel.grid.major = element_blank()) +
+  coord_sf(expand = FALSE, datum = NA)
+
+save_plot_speciale("output-figures/conflicts_map_point.png")
+
 
 # Heat map
 # Join acled with GADM regions
@@ -118,6 +136,137 @@ data_to_plot %>%
   labs(title = "Conflicts mapped in CAR")
 
 
+
+# Mines coordinates -----
+# Join GADM region boundaries with mine coordinates
+car_mines_gadm <- st_join(car_mines, gadm_simp) %>%
+  select(id = id.x, region = region_1) %>%
+  mutate(id = fct_relevel(id, "Hydrocarbon", "Gold", "Diamonds"))
+
+# Check which are NA (don't include any mines)
+car_mines_gadm %>%
+  filter(is.na(id))
+
+# Bar plot
+car_mines_gadm %>%
+  tibble() %>%
+  group_by(region, id) %>%
+  summarise(n = n()) %>%
+  group_by(region) %>%
+  mutate(total = sum(n)) %>%
+  ggplot(.,
+         aes(x = n,
+             y = reorder(region, total))) +
+  geom_col(aes(fill = id)) +
+  scale_fill_manual(name = "", values = c("Gold" = gold_speciale,
+                                          "Diamonds" = bluel_speciale,
+                                          "Hydrocarbon" = brown_speciale)) +
+  labs(title = "Number of mines per region in the CAR per 2017",
+       subtitle = NULL,
+       y = NULL,
+       x = NULL,
+       caption = "Source: William Rohde Madsen.") +
+  theme_speciale +
+  theme(panel.grid.major.y = element_blank())
+
+save_plot_speciale("output-figures/mines_in_car_bar.png")
+
+## Map point plot -----
+ggplot() +
+  geom_sf(data = gadm_simp) +
+  geom_sf(data = car_mines,
+          aes(colour = id),
+          size = 2) +
+  scale_colour_manual(name = "", values = c("Gold" = gold_speciale,
+                                            "Diamonds" = bluel_speciale,
+                                            "Hydrocarbon" = brown_speciale)) +
+  labs(title = "Spatial distribution of mines in the CAR per 2017",
+       subtitle = NULL,
+       y = NULL,
+       x = NULL,
+       caption = "Source: William Rohde Madsen.") +
+  theme_speciale +
+  theme(panel.grid.major.y = element_blank()) +
+  coord_sf(expand = FALSE, datum = NA)
+
+save_plot_speciale("output-figures/mines_in_car_map_point.png")
+
+## Map bar plot ----
+
+## Find and add centroid x and y coordinates
+europe_centroids <- st_centroid(europe_clipped$geometry)
+europe_clipped_points <- cbind(europe_clipped, st_coordinates(europe_centroids))
+
+###### Summarise followers by country
+### Change certain country names (Russia)
+data_for_plot <- demo_collapsed %>%
+  filter(demo == "followerCountsByRegion" & company_name == company_in_loop_new) %>%
+  filter(date == max(date)) %>%
+  group_by(country_name) %>%
+  summarise(followers_total = sum(followers_total)) %>%
+  mutate(country_name = case_when(country_name == "Russian Federation" ~ "Russia",
+                                  TRUE ~ as.character(country_name)))
+
+###### Merge with followers data
+### Replace NA followers with 0
+data_for_plot <- merge(europe_clipped_points,
+                       data_for_plot,
+                       by.x = "name", by.y = "country_name",
+                       all = TRUE) %>%
+  filter(!is.na(admin)) %>%
+  mutate(followers_total = case_when(is.na(followers_total) ~ as.integer(0),
+                                     TRUE ~ as.integer(followers_total))) %>%
+  arrange(-followers_total) %>%
+  mutate(top_ten = if_else(row_number() <= 10, TRUE, FALSE),
+         label_w_total = paste0(name, " (", followers_total, ")"))
+
+###### Plot
+
+# Breaks
+# Create breaks for the color scale
+# map_breaks <- c(0, 5, 25, 100, 250)
+map_limits <- c(1, max(data_for_plot$followers_total))
+total_followers_europe <- sum(data_for_plot$followers_total)
+
+# Height of segment as index numbers
+data_for_plot$segment_height <- data_for_plot$followers_total/max(data_for_plot$followers_total)*100/10
+
+
+ggplot(data_for_plot) +
+  geom_sf(alpha = 1, col = "white") +
+  coord_sf(expand = FALSE, datum = NA) +
+  #geom_point(aes(x = X, y = Y, size = followers_total), colour = colour_code) +
+  geom_segment(data = data_for_plot[data_for_plot$followers_total > 0,],
+               aes(x = X, y = Y-0.01, xend = X, yend = Y+segment_height+0.01),
+               colour = "black", size = 7.2,
+               lineend = "butt") +
+  geom_segment(aes(x = X, y = Y, xend = X, yend = Y+segment_height),
+               colour = colour_in_loop, size = 7,
+               lineend = "butt") 
+
+
+
+
+# Production mines -----
+production %>%
+  ggplot(.,
+         aes(x = year,
+             y = value,
+             group = id)) +
+  geom_line(aes(colour = id), size = 3) +
+  facet_wrap(~id, scales = "free_y") +
+  scale_colour_manual(name = "", values = c("Gold (grams)" = gold_speciale,
+                                            "Diamonds (carats)" = bluel_speciale)) +
+  scale_y_continuous(labels = comma) +
+  labs(title = "Production by mines in the CAR since 2016",
+       subtitle = NULL,
+       y = NULL,
+       x = NULL,
+       caption = "Source: William Rohde Madsen.") +
+  theme_speciale +
+  theme(panel.grid.major.x = element_blank())
+
+save_plot_speciale("output-figures/mines_in_car_production.png")
 
 
 
