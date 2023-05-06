@@ -63,6 +63,8 @@ gadm_raw <- list.files(pattern = "1.shp", recursive = TRUE) %>%
 
 
 # FEEL sentiment dictionary ----
+# Amine Abdaoui, Jérôme Azé, Sandra Bringay et Pascal Poncelet
+# http://advanse.lirmm.fr/feel.php
 feel_raw <- read_delim("data-raw/Sentiment/FEEL.csv", delim = ";")
 
 
@@ -81,5 +83,16 @@ forbes_raw <- read_excel("data-raw/Oligarchs/NPZ2017MainFiguresTables.xlsx",
 
 
 # Conflicts data -----
-acled_raw <- read_csv("data-raw/Konflikter/2020-04-22-2023-05-31-Central_African_Republic.csv")
+acled_raw <- read_csv("data-raw/Konflikter/2000-01-01-2023-05-31-Central_African_Republic-Mali.csv")
+
+# CAR mines coordinates ----
+car_mines_diamonds_raw <- read_sf("data-raw/Mines-CAR/diamond-blue.shp")
+car_mines_gold_raw <- read_sf("data-raw/Mines-CAR/gold-gold.shp")
+car_mines_carbon_raw <- read_sf("data-raw/Mines-CAR/hydrocarbon-black.shp")
+
+# Production gold and diamonds ----
+production_raw <- read_excel("data-raw/Mines-CAR/Mining stats CAR Manual.xlsx", skip = 1)
+
+
+
 

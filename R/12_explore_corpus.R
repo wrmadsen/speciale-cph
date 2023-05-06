@@ -87,6 +87,9 @@ master_tokens_tbl %>%
 
 
 # Data collection chapter ---
+# Number of words in total
+
+
 # Summary
 master_text %>% summary()
 
