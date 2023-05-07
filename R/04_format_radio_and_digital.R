@@ -103,4 +103,7 @@ digital <- digital_raw_binded %>%
 
 digital_master <- digital
 
+# Number of rows in total -----
+nrow(radio_master) + nrow(digital_master)
+
 
