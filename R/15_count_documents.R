@@ -75,7 +75,9 @@ count_docs %>%
   filter(date >= as.Date("2020-01-01")) %>%
   ggplot() +
   geom_line(aes(x = date,
-                y = n_roll_index, colour = sub_group), linewidth = 1.5) +
+                y = n_roll_index,
+                colour = sub_group,
+                linetype = sub_group), linewidth = 1) +
   # geom_smooth(aes(x = date,
   #                 y = n_roll_index,
   #                 colour = sub_group), se = FALSE, linetype = 2) +
@@ -85,7 +87,7 @@ count_docs %>%
                 ymin = -Inf,
                 ymax = Inf),
             alpha = 0.12,
-            fill = orange_speciale) +
+            fill = "grey95") +
   geom_text(data = spike_periods,
             aes(x = date_middle,
                 y = 460,
@@ -99,17 +101,20 @@ count_docs %>%
   #                      label = sub_group),
   #                  family = theme_font,
   #                  size = 6) +
-  scale_colour_manual(name = "", values = colours_groups) +
-  scale_x_date(labels = dateformat(), date_breaks = "4 months") +
+  scale_colour_manual(name = "", values = bw_colours_groups) +
+  scale_linetype_manual(name = "", values = lines_group) +
+  scale_x_date(labels = dateformat(), date_breaks = "6 months") +
   #scale_y_continuous(limits = c(0, 600)) +
-  labs(title = "Number of documents over time for CAR media outlets (100 = April 2020)",
-       subtitle = "Rolling average index. Central African Republic media outlets.",
+  labs(title = "Number of documents over time for CAR media outlets (index 100 = April 2020)",
+       subtitle = NULL, #"Rolling average index. Central African Republic media outlets.",
        y = NULL,
        x = NULL,
-       caption = "Source: William Rohde Madsen.") +
-  theme_speciale
+       caption = NULL, #"Source: William Rohde Madsen."
+       ) +
+  theme_speciale +
+  theme(panel.grid.major.x = element_blank())
 
-save_plot_speciale("output/figure_n_docs_per_week_labelled.png")
+save_plot_speciale("output-figures/figure_n_docs_per_week_labelled.png")
 
 
 ## Read text related to spikes ----
@@ -128,8 +133,8 @@ rows_to_read_as_txt %>%
   split(rows_to_read_as_txt$document) %>%
   Map(rbind, ., NA) %>%
   do.call(rbind, .) %>%
-  mutate(id = rep(rows_to_read_as_txt$document, each = 2)) %>%
-  write.table(., file = "output/my_data.txt", sep = "")
+  mutate(id = rep(rows_to_read_as_txt$document, each = 2)) #%>%
+  #write.table(., file = "output/my_data.txt", sep = "")
 
 
 
