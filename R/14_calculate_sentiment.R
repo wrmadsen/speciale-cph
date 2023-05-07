@@ -1,6 +1,6 @@
 # Calculate sentiment
 
-# Join tokens with FEEL dictionary
+# Join tokens with FEEL dictionary -----
 master_sentiment <- left_join(master_tokens_tbl, feel, by = c("token" = "text")) %>%
   select(document, orient, group, sub_group, text, token, date, week, year, month, score)
 
@@ -8,56 +8,24 @@ master_sentiment <- left_join(master_tokens_tbl, feel, by = c("token" = "text"))
 master_sentiment %>%
   group_by(has_score = !is.na(score)) %>%
   summarise(n = n()) %>%
-  mutate(share = n/sum(n)) # 81% don't
+  mutate(share = n/sum(n)) # 84% don't
+
+# Check some without
+#master_sentiment %>% filter(is.na(score)) %>% select(token)
 
 # View tokens
 master_sentiment %>%
   filter(token == "president") #%>% view()
 
-# Calculate sentiment ----
-calculate_sentiment <- function(master_sentiment, pattern_1 = "russ|poutin"){
-  
-  ## First calculate sentiment per document ----
-  # Calculate
-  # And add columns based on tokens to calculate later sentiments
-  sentiment_per_document <- master_sentiment %>%
-    mutate(to_subset = if_else(str_detect(token, pattern_1), 1, 0)) %>%
-    group_by(document) %>%
-    mutate(to_subset = max(to_subset)) %>%
-    group_by(orient, group, sub_group, date, week, month, year, to_subset, document, text) %>%
-    summarise(score_document = mean(score, na.rm = TRUE)) %>%
-    ungroup()
-  
-  # Check documents that are very critical of topic 1
-  # And those very positive of 1
-  # Supposedly
-  sentiment_per_document %>%
-    filter(to_subset == 1) %>%
-    slice_max(score_document, n = 10)
-  
-  ## General sentiment per group per period ----
-  senti_0 <- sentiment_per_document %>%
-    group_by(orient, group, sub_group, year, month) %>%
-    summarise(score_0 = mean(score_document, na.rm = TRUE),
-              n_docs_0 = n_distinct(document)) %>%
-    ungroup()
-  
-  ## Sentiment per period for documents containing topic 1
-  senti_1 <- sentiment_per_document %>%
-    filter(to_subset == 1) %>%
-    group_by(orient, group, sub_group, year, month) %>%
-    summarise(score_1 = mean(score_document, na.rm = TRUE),
-              n_docs_1 = n_distinct(document)) %>%
-    ungroup()
-  
-  # Join to see relative sentiment
-  master_senti_scores <- full_join(senti_0, senti_1) %>%
-    mutate(difference = score_1 - score_0)
-  
-  # Return
-  master_senti_scores
-  
-}
+# First calculate sentiment per document ----
+# And add columns based on tokens to calculate later sentiments
+sentiment_per_document <- master_sentiment %>%
+  group_by(document) %>%
+  summarise(score_document = mean(score, na.rm = TRUE)) %>%
+  ungroup()
+
+# Second add sentiment to thetas (topics) object ----
+master_sentiment <- full_join(master_dt_thetas, sentiment_per_document, by = "document")
 
 # Plot raw sentiment -----
 

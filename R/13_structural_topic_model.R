@@ -2,112 +2,90 @@
 
 glimpse(master_tokens_tbl)
 
-# Run preliminary models ----
-# Fit
-# stm_out <- stm(documents = master_dfm,
-#                K = 15,
-#                seed = 12345)
-
-# Save model
-#save(stm_out, file = "output/stm_out.Rdata")
-load("output/stm_out.Rdata")
-
-# Plot stm
-plot(stm_out)
-
-labelTopics(stm_out)
-
-# Topic over time
-# Assign the topic of interest to the data
-# I have chosed topic 4, you might have selected something else.
-master_dt$topic_7_russ <- stm_out$theta[,7]
-
-master_dt %>%
-  ggplot(aes(x = month,
-             y = topic_7_russ)) +
-  geom_point(aes(colour = sub_group), alpha = .2) +
-  geom_smooth() +
-  facet_wrap(~sub_group) +
-  scale_colour_manual(name = "", values = colours_groups) +
-  scale_x_date(labels = dateformat(), date_breaks = "14 months") +
-  labs(title = "Proportion of documents allocated to topic 7",
-       x = NULL,
-       caption = "Source: William Rohde Madsen.") +
-  theme_speciale
-
 # Run model with covariates ----
 ## Fit multiple models to find optimal K ----
-#plan(sequential) # same as multiprocess
-#plan(multisession)
+values_of_k <- c(10, 20, 30, 40, 50, 60, 70)
+values_of_k = c(30)
+n <- length(values_of_k)
+many_models_one = list()
+many_models_one = vector("list", length = n)
 
-plan(sequential, workers = 4)
-
-values_of_k <- data_frame(K = c(20, 40, 60))
-
-values_of_k <- c(20, 40, 60)
-
-with_progress({
+for (i in 1:n) {
   
-  p <- progressor(steps = length(values_of_k))
+  value_of_k <- values_of_k[i]
   
-  many_models_one <- future_map(values_of_k,
-                                ~stm(documents = master_dfm,
-                                    K = .,
-                                    #prevalence = ~sub_group,
-                                    seed = 12345),
-                                p = p)
+  model_in_loop <- stm(documents = master_dfm,
+                       prevalence = ~sub_group,
+                       K = value_of_k,
+                       seed = 12345)
   
-})
-
-with_progress({
+  many_models_one[[i]] <- model_in_loop
   
-  p <- progressor(steps = nrow(ks_to_check))
+  runif(1, 0.1, 0.2) %>% Sys.sleep()
   
-  many_models_one <- ks_to_check %>%
-    mutate(topic_model = future_map(K,
-                                    ~stm(documents = master_dfm,
-                                         K = .,
-                                         #prevalence = ~sub_group,
-                                         seed = 12345),
-                                    p = p)
-    )
-})
+  percentage_done <- i/n
+  percentage_done <- percentage_done*100
+  percentage_done <- round(percentage_done, 0)
+  
+  paste(i, "of", n, " (", percentage_done, "% done).") %>% print()
+  
+}
 
 # Save models
-save(many_models_one, file = "output/many_models_one.Rdata")
+#save(many_models_one, file = "output/many_models_one.Rdata")
 load("output/many_models_one.Rdata")
 
-## Fit model one -----
-docvars(master_dfm) %>% names
+# Calculate
+results_of_k <- data.frame(K = values_of_k) %>%
+  mutate(topic_model = many_models_one)
 
-stm_out_prevalence_one <- stm(documents = master_dfm,
-                              prevalence = ~sub_group,
-                              K = 15,
-                              seed = 12345)
+heldout <- make.heldout(master_dfm)
 
-# Save model
-save(stm_out_prevalence_one, file = "output/stm_out_prevalence_one.Rdata")
-load("output/stm_out_prevalence_one.Rdata")
+results_of_k <- results_of_k %>%
+  mutate(exclusivity = map(topic_model, exclusivity),
+         semantic_coherence = map(topic_model, semanticCoherence, master_dfm),
+         eval_heldout = map(topic_model, eval.heldout, heldout$missing),
+         residual = map(topic_model, checkResiduals, master_dfm),
+         bound =  map_dbl(topic_model, function(x) max(x$convergence$bound)),
+         lfact = map_dbl(topic_model, function(x) lfactorial(x$settings$dim$K)),
+         lbound = bound + lfact,
+         iterations = map_dbl(topic_model, function(x) length(x$convergence$bound))) %>%
+  select(-topic_model)
 
-## Fit model two -----
-# docvars(master_dfm) %>% names
-# 
-# stm_out_prevalence_two <- stm(documents = master_dfm,
-#                               prevalence = ~sub_group*spike_binary,
-#                               K = 15,
-#                               seed = 12345)
-# 
-# # Save model
-# save(stm_out_prevalence_two, file = "output/stm_out_prevalence_two.Rdata")
-# load("output/stm_out_prevalence_two.Rdata")
+#save(results_of_k, file = "output/results_of_k.Rdata")
+load("output/results_of_k.Rdata")
 
-# Check models ----
+# Plot
+# Four facets
+results_of_k %>%
+  transmute(K,
+            #`Lower bound` = lbound,
+            Exclusivity = map_dbl(exclusivity, mean),
+            #Residuals = map_dbl(residual, "dispersion"),
+            `Semantic coherence` = map_dbl(semantic_coherence, mean),
+            #`Held-out likelihood` = map_dbl(eval_heldout, "expected.heldout")
+  ) %>%
+  pivot_longer(names_to = "Metric", values_to = "Value", -K) %>%
+  ggplot(aes(x = K, y = Value)) +
+  geom_line(linewidth = 1.5, alpha = 0.7, show.legend = FALSE) +
+  geom_vline(xintercept = 40, linewidth = 2) +
+  facet_wrap(~Metric, scales = "free_y") +
+  labs(x = "K (the number of topics)",
+       y = NULL,
+       title = "Exclusivity and semantic coherence for topic models") +
+  theme_speciale
 
-# Model to check
-stm_to_check <- stm_out_prevalence_one
+save_plot_speciale("output-figures/exclusivity_semantic_coherence.png")
+
+## Select model -----
+master_stm <- many_models_one[[4]]
+
+number_of_topics <- master_stm$settings$dim$K
+
+# Check model ----
 
 # Extract the matrix of words with highest frex scores
-topic_labels_matrix <- labelTopics(stm_to_check, n = 10)$frex
+topic_labels_matrix <- labelTopics(master_stm, n = 10)$frex
 
 # Collapse the words for each topic into a single label
 topic_labels_underscore <- apply(topic_labels_matrix, 1, paste0, collapse = "_")
@@ -115,17 +93,26 @@ topic_labels_underscore <- apply(topic_labels_matrix, 1, paste0, collapse = "_")
 topic_labels_space <- apply(topic_labels_matrix, 1, paste0, collapse = ", ")
 
 ### Create object of thetas ----
-stm_to_check_theta <- stm_to_check$theta %>%
+master_stm_theta <- master_stm$theta %>%
   data.frame() %>%
   tibble() %>%
   clean_names()
 
-#names(stm_out_prevalence_one_theta) <- paste0("topic_", str_pad(1:15, 2, pad = "0"), "_", topic_labels)
-names(stm_to_check_theta) <- paste0("Topic ", str_pad(1:15, 2, pad = "0"))
+names(master_stm_theta) <- paste0("Topic ", str_pad(1:number_of_topics, 2, pad = "0"))
+
+# Add document number as column to thetas
+#master_dfm %>% dfm_subset(., document == "text312") # check text400 and 1012 are empty/fully sparse
+document_no_thetas <- convert(master_dfm, to = "stm")
+document_no_thetas <- names(document_no_thetas$documents)
+
+master_stm_theta <- master_stm_theta %>%
+  mutate(document = document_no_thetas) %>%
+  select(document, everything())
 
 # Join theta values to master_dt
-master_dt_thetas <- master_dt %>%
-  bind_cols(stm_to_check_theta)
+# Ensure master_dt has same documents as master_stm
+# Due to the empty documents dropped during stm(), dfm2stm(x, docvars, omit_empty = TRUE)
+master_dt_thetas <- full_join(master_dt, master_stm_theta)
 
 # Long version
 master_dt_thetas_long <- master_dt_thetas %>%
@@ -137,9 +124,10 @@ topic_labels_space
 master_dt_thetas_long %>%
   filter(sub_group != "Non-Russian total") %>%
   group_by(topic) %>%
-  summarise(topic_proportion = mean(topic_proportion)) %>%
+  summarise(topic_proportion = mean(topic_proportion, na.rm = TRUE)) %>%
   ungroup() %>%
   mutate(topic_labels_space) %>%
+  arrange(-topic_proportion) %>%
   transmute(Topic = topic,
             topic_proportion = topic_proportion*100,
             topic_proportion = round(topic_proportion, 2),
@@ -152,28 +140,50 @@ master_dt_thetas_long %>%
   set_header_labels(.,
                     topic = "Topic",
                     topic_proportion = "Proportion (%)",
-                    topic_labels_space = "Common words") %>%
-  save_as_docx(path = "output-tables/master_dt_thetas_long.docx")
+                    topic_labels_space = "Common words") #%>%
+#save_as_docx(path = "output-tables/master_dt_thetas_long.docx")
 
 ### Topic proportion total by group ----
 # Calculate 
 data_for_plot <- master_dt_thetas_long %>%
   group_by(sub_group, topic) %>%
-  summarise(topic_proportion = mean(topic_proportion)*100) %>%
+  summarise(topic_proportion = mean(topic_proportion, na.rm = TRUE)*100) %>%
   ungroup()
 
 # Plot
+# Top 10 by media 
 data_for_plot %>%
-  mutate(colour_of_bars = if_else(topic %in% c("Topic 13"), 1, 0) %>% as.factor) %>%
+  #mutate(colour_of_bars = if_else(topic %in% c("Topic 13"), 1, 0) %>% as.factor) %>%
   #mutate(name = gsub("(.{23})\\_(.*)", "\\1\n\\2", name)) %>%
-  filter(!sub_group %in% c("Non-Russian total", "Pro-Russian total")) %>%
+  #filter(!sub_group %in% c("Non-Russian total", "Pro-Russian total")) %>%
+  group_by(sub_group) %>%
+  slice_max(n = 10, order_by = topic_proportion) %>%
+  ungroup %>%
+  mutate(sub_group = as.factor(sub_group),
+         topic_colour = as.factor(topic),
+         topic = reorder_within(topic, topic_proportion, sub_group)) %>%
   ggplot(aes(x = topic_proportion,
-             y = sub_group)) +
-  geom_col(aes(fill = sub_group)) +
-  facet_wrap(~topic, scales = "free") +
-  scale_fill_manual(name = "", values = colours_groups) +
+             y = topic)) +
+  geom_col(aes(fill = topic_colour), show.legend = FALSE) +
+  facet_wrap(~sub_group, scales = "free_y") +
+  #scale_fill_manual(name = "", values = colours_groups) +
   scale_x_continuous(n.breaks = 3) +
-  labs(title = "Mean proportion of topics by sub group",
+  scale_y_reordered() +
+  labs(title = "Mean proportion for 10 most frequent topics per sub group",
+       x = NULL,
+       caption = "Source: William Rohde Madsen.") +
+  theme_speciale
+
+# Plot with points
+data_for_plot %>%
+  mutate(half = topic %in% paste0("Topic ", str_pad(21:40, 2, pad = "0"))) %>%
+  ggplot(.,
+         aes(x = topic_proportion,
+             y = topic)) +
+  geom_point(aes(shape = sub_group), size = 4) +
+  facet_wrap(~half, scales = "free_y") +
+  scale_shape_manual(values = points_group) +
+  labs(title = "Mean proportion for topics by media",
        x = NULL,
        caption = "Source: William Rohde Madsen.") +
   theme_speciale
@@ -190,21 +200,25 @@ data_for_plot <- master_dt_thetas_long %>%
 
 # Plot
 data_for_plot %>%
-  mutate(topic = gsub("(.{23})\\_(.*)", "\\1\n\\2", topic)) %>%
-  filter(date > as.Date("2020-01-01")) %>%
-  filter(!sub_group %in% c("Pro-Russian total", "Non-Russian total")) %>%
+  # mutate(topic = gsub("(.{23})\\_(.*)", "\\1\n\\2", topic)) %>%
+  # filter(date > as.Date("2020-01-01")) %>%
+  filter(topic %in% c("Topic 10", "Topic 28", "Topic 12", "Topic 21", "Topic 06", "Topic 31")) %>%
   ggplot(aes(x = date,
              y = topic_proportion)) +
-  #geom_point(aes(colour = sub_group), alpha = 0.1) +
-  geom_smooth(aes(colour = sub_group), se = FALSE, linewidth = 2) +
+  geom_smooth(aes(colour = sub_group,
+                  linetype = sub_group),
+              se = FALSE, linewidth = 1) +
   facet_wrap(~topic, scales = "free") +
-  scale_colour_manual(name = "", values = colours_groups) +
-  scale_x_date(labels = dateformat(), date_breaks = "12 months") +
+  scale_colour_manual(name = "", values = bw_colours_groups) +
+  scale_linetype_manual(name = "", values = lines_group) +
+  scale_x_date(labels = dateformat(), date_breaks = "24 months") +
   #scale_y_continuous(limits = c(0, 0.25)) +
   labs(title = "Mean proportion of topics per week",
        x = NULL,
        caption = "Source: William Rohde Madsen.") +
-  theme_speciale
+  theme_speciale +
+  theme(panel.grid.major.x = element_blank()) +
+  theme(legend.key.size =  unit(0.5, "in"))
 
 save_plot_speciale("output-figures/topic_prop_mean_over_time.png", height = 23, width = 30)
 
@@ -264,7 +278,7 @@ data_for_plot_change %>%
        caption = "Source: William Rohde Madsen.") +
   theme_speciale
 
-save_plot_speciale("output/topic_prop_change_over_time_first.png")
+#save_plot_speciale("output/topic_prop_change_over_time_first.png")
 
 # Topic 11
 data_for_plot_change %>%
@@ -284,7 +298,7 @@ data_for_plot_change %>%
        caption = "Source: William Rohde Madsen.") +
   theme_speciale
 
-save_plot_speciale("output-figures/topic_prop_change_over_time_13.png")
+#save_plot_speciale("output-figures/topic_prop_change_over_time_13.png")
 
 
 
