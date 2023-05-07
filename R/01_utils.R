@@ -101,8 +101,8 @@ gold_speciale <- "#D4AF37"
 crimson_red <- "#DC143C"
 
 # Groups-specific
-colours_groups <- c("Ndjoni Sango" = "red2",
-                    "Radio Lengo Songo" = blued_speciale,
+colours_groups <- c("Ndjoni Sango" = crimson_red,
+                    "Radio Lengo Songo" = red_speciale,
                     "Radio Ndeke Luka" = greenl_speciale,
                     "Reseau des journalistes" = greend_speciale,
                     "Non-Russian total" = greenm_speciale,
@@ -110,6 +110,23 @@ colours_groups <- c("Ndjoni Sango" = "red2",
                     "Pro-Russian total" = red_speciale,
                     "Pro-Russia" = red_speciale,
                     "Other" = greenm_speciale)
+
+bw_colours_groups <- c("Ndjoni Sango" = "black",
+                       "Radio Lengo Songo" = "grey5",
+                       "Radio Ndeke Luka" = "grey70",
+                       "Reseau des journalistes" = "grey80")
+
+# http://sape.inf.usi.ch/quick-reference/ggplot2/linetype
+lines_group <- c("Ndjoni Sango" = "solid",
+                 "Radio Lengo Songo" = "dashed",
+                 "Radio Ndeke Luka" = "solid",
+                 "Reseau des journalistes" = "dashed")
+
+# http://sape.inf.usi.ch/quick-reference/ggplot2/shape
+points_group <- c("Ndjoni Sango" = 16,
+                  "Radio Lengo Songo" = 17,
+                  "Radio Ndeke Luka" = 5,
+                  "Reseau des journalistes" = 6)
 
 # Annotation size ----
 # when text size
@@ -138,9 +155,11 @@ theme_speciale <- theme(axis.text = element_text(size = unit(text_size, "mm"),
   theme(legend.position = "top",
         legend.text = element_text(family = theme_font, size = unit(text_size, "mm")),
         legend.title = element_text(family = theme_font, size = unit(text_size, "mm")),
-        legend.key = element_blank()) +
+        legend.key = element_blank(),
+        legend.key.size =  unit(0.5, "in")) +
   theme(strip.text = element_text(family = theme_font, size = unit(text_size, "mm")),
         strip.background = element_rect(fill = "white"))
+
 
 
 # Table theme ----
