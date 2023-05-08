@@ -111,6 +111,8 @@ groups <- c("coalition des mouvements de lazawad",
             "lac debo tv",
             "joliba fm",
             "ndjoni sango",
+            "radio ndeke luka",
+            "lengo songo",
             #"wagner",
             "ouverture media",
             "actuel media",
@@ -129,9 +131,8 @@ phrases <- c(#"was live"
 # Create named vector
 strings_to_recode <- c(names, countries, groups, phrases) %>%
   tibble(old = .) %>%
-  mutate(new = gsub(" ", "_", old),
-         new = paste0(new, "_")
-  ) %>%
+  mutate(new = gsub(" ", "_", old)) %>%
+         #new = paste0(new, "_") # why at the end?
   # to named vector
   deframe()
 
@@ -173,7 +174,7 @@ convert_to_dt <- function(input){
 # Create tokens ----
 
 ## Create and clean tokens
-create_tokens <- function(dt){
+create_tokens <- function(dt, bbalet){
   
   # Test
   #dt <- master_dt
@@ -194,8 +195,10 @@ create_tokens <- function(dt){
     stri_trans_general(str = ., id = "Latin-ASCII")
   
   # Remove stopwords before stemming the tokens
+  # Also remove more stopwords (bbalet set of stopwords))
   tokens <- tokens_remove(tokens, pattern = french_stopwords)
-  
+  tokens <- tokens_remove(tokens, pattern = bbalet$word)
+
   tokens
   
 }
@@ -312,22 +315,18 @@ master_text <-master_text %>%
   mutate(spike_no = if_else(is.na(spike_no), 0, spike_no), 
          spike_binary = if_else(spike_no > 0, 1, 0) %>% as.factor)
 
-# Add observations that are pro-Russia or Non-Russian total
-# Remove this?
-# This doubles the number of rows, making the model process slower
-# master_text <- bind_rows(master_text %>%
-#                            filter(orient != "Pro-Russia") %>%
-#                            mutate(sub_group = "Non-Russian total"),
-#                          master_text %>%
-#                            filter(orient == "Pro-Russia") %>%
-#                            mutate(sub_group = "Pro-Russian total")) %>%
-#   bind_rows(master_text)
+# Drop with less than 200 characters
+master_text %>%
+  filter(text_nchar < 200) %>% select(text, url) #%>% view
 
-
+master_text <- master_text %>%
+  filter(text_nchar >= 200)
 
 # Run functions ----
 master_dt <- master_text %>%
-  mutate(text = remove_patterns_in_post(text),
+  mutate(text = gsub("'|'|’|’", " ", text),
+         text = str_squish(text),
+         text = remove_patterns_in_post(text),
          text = remove_accents(text),
          text = tolower(text),
          text = find_and_remove_repeated_substring(text)) %>%
@@ -335,16 +334,17 @@ master_dt <- master_text %>%
   convert_to_dt()
 
 # Remove certain patterns from text
-patterns_to_remove <- c("var player = new mediaelementplayerplayer")
+patterns_to_remove <- c("radio_ndeke_luka",
+                        "lengo_songo",
+                        "ndjoni_sango",
+                        "net",
+                        "cest")
 
 patterns_to_remove <- patterns_to_remove %>%
   paste0(., collapse = "|")
 
-master_dt <- master_dt %>%
-  mutate(text = gsub(patterns_to_remove, "", text))
-
 master_tokens <- master_dt %>%
-  create_tokens() %>%
+  create_tokens(., bbalet) %>%
   # At least two character length
   tokens_select(., min_nchar = 2)
 
@@ -354,9 +354,7 @@ master_tokens_stemmed <- master_tokens %>%
 
 # Replace tokens
 master_tokens_stemmed <- master_tokens_stemmed %>%
-  replace_tokens(., tokens_to_recode) #%>%
-# Remove certain tokens
-#tokens_remove(., total_to_be_removed)
+  replace_tokens(., tokens_to_recode)
 
 master_dfm <- master_tokens %>%
   create_dfm() %>%
@@ -364,10 +362,9 @@ master_dfm <- master_tokens %>%
   # Must have minimum term count
   # But maximum document count
   dfm_trim(.,
-           min_termfreq = 50,
-           termfreq_type = "count",
-           max_docfreq = 1000,
-           docfreq_type = "count")
+           min_docfreq = 0.01,
+           #max_docfreq = 0.20,
+           docfreq_type = "prop")
 
 master_dfm_tf_idf <- master_dfm %>%
   dfm_tfidf()
