@@ -46,7 +46,10 @@ remove_patterns_in_post <- function(input){
               '"', "\\'",
               "\\!", "\\?", "・",
               "l'", "L'", "L’", "l’",
-              "d'", "D'", "D’", "d’")
+              "d'", "D'", "D’", "d’",
+              "-", "<", "[", ".", "]", ">",
+              "«", "»",
+              "=")
   
   # Quotes
   quotes <- c("['‘’”“]")
@@ -134,7 +137,7 @@ text_size <- 15
 anno_size <- text_size*(5/14)
 
 # Font -----
-theme_font <- "Garamond"
+theme_font <- "Arial"
 
 #font_import()
 #loadfonts()
