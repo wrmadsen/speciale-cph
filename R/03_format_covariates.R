@@ -57,7 +57,7 @@ gadm_simp <- gadm_simp %>%
 # Remove accents and stem
 feel <- feel_raw %>%
   transmute(text = remove_accents(word),
-            text = remove_patterns_in_post(word),
+            text = remove_patterns_in_post(text),
             score = case_when(polarity == "positive" ~ 1,
                               polarity == "negative" ~ -1)
   ) %>%
@@ -67,6 +67,18 @@ feel <- feel_raw %>%
 feel <- feel %>%
   mutate(text = char_wordstem(text, language = "fr"),
          text = stri_trans_general(str = text, id = "Latin-ASCII"))
+
+# Format French stopwords -----
+# Remove accents and stem
+bbalet <- bbalet_raw %>%
+  select(word = a) %>%
+  transmute(word = remove_accents(word),
+            word = remove_patterns_in_post(word)) 
+
+# # Stem words
+# feel <- feel %>%
+#   mutate(text = char_wordstem(text, language = "fr"),
+#          text = stri_trans_general(str = text, id = "Latin-ASCII"))
 
 
 # Format Lock data -----
