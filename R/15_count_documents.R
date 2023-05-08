@@ -104,7 +104,7 @@ count_docs %>%
   scale_colour_manual(name = "", values = bw_colours_groups) +
   scale_linetype_manual(name = "", values = lines_group) +
   scale_x_date(labels = dateformat(), date_breaks = "6 months") +
-  #scale_y_continuous(limits = c(0, 600)) +
+  scale_y_continuous(limits = c(0, 600)) +
   labs(title = "Number of documents over time for CAR media outlets (index 100 = April 2020)",
        subtitle = NULL, #"Rolling average index. Central African Republic media outlets.",
        y = NULL,
