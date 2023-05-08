@@ -1,11 +1,8 @@
 # Structural topic models (STMs)
 
-glimpse(master_tokens_tbl)
-
 # Run model with covariates ----
 ## Fit multiple models to find optimal K ----
 values_of_k <- c(10, 20, 30, 40, 50, 60, 70)
-values_of_k = c(30)
 n <- length(values_of_k)
 many_models_one = list()
 many_models_one = vector("list", length = n)
@@ -32,7 +29,7 @@ for (i in 1:n) {
 }
 
 # Save models
-#save(many_models_one, file = "output/many_models_one.Rdata")
+save(many_models_one, file = "output/many_models_one.Rdata")
 load("output/many_models_one.Rdata")
 
 # Calculate
@@ -112,7 +109,8 @@ master_stm_theta <- master_stm_theta %>%
 # Join theta values to master_dt
 # Ensure master_dt has same documents as master_stm
 # Due to the empty documents dropped during stm(), dfm2stm(x, docvars, omit_empty = TRUE)
-master_dt_thetas <- full_join(master_dt, master_stm_theta)
+master_dt_thetas <- full_join(master_dt, master_stm_theta) %>%
+  tibble()
 
 # Long version
 master_dt_thetas_long <- master_dt_thetas %>%
