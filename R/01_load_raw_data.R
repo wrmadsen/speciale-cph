@@ -67,6 +67,9 @@ gadm_raw <- list.files(pattern = "1.shp", recursive = TRUE) %>%
 # http://advanse.lirmm.fr/feel.php
 feel_raw <- read_delim("data-raw/Sentiment/FEEL.csv", delim = ";")
 
+# French stopwords
+# https://github.com/stopwords-iso/stopwords-fr
+bbalet_raw <- read_table("data-raw/Sentiment/bbalet_stopwords_fr.txt")
 
 # Load litt review data -----
 # Lock
