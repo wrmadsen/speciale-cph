@@ -197,11 +197,11 @@ radio %>%
 #   print(n = 300)
 
 # Rename
-radio_master <- radio
+master_radio <- radio
 
-head(radio_master)
+head(master_radio)
 
-summary(radio_master$date)
+summary(master_radio$date)
 
 
 # Tidy digital media -----
@@ -247,9 +247,9 @@ digital %>%
   filter(text_nchar < 1100 & text_nchar > 900) %>%
   slice_sample(n = 300) #%>% view()
 
-digital_master <- digital
+master_digital <- digital
 
 # Number of rows in total -----
-nrow(radio_master) + nrow(digital_master)
+nrow(master_radio) + nrow(master_digital)
 
 
