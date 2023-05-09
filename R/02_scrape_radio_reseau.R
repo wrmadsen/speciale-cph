@@ -7,12 +7,12 @@ source("R/01_utils.R")
 ## Get links -----
 
 # Main URL
-url_radio_reseau <- "https://www.rjdhrca.org/category/actualites/page/" #"1/" for example
+url_rjdh <- "https://www.rjdhrca.org/category/actualites/page/" #"1/" for example
 
 # Function to get links from each page
-get_links_from_radio_reseau <- function(url){
+get_links_from_rjdh <- function(url){
   
-  #url <- url_radio_reseau
+  #url <- url_rjdh
   
   url %>%
     #paste0("1/") %>%
@@ -35,9 +35,9 @@ get_links_from_radio_reseau <- function(url){
 #   
 #   #i <- 1
 #     
-#   new_links <- url_radio_reseau %>%
+#   new_links <- url_rjdh %>%
 #     paste0(., i, "/") %>%
-#     get_links_from_radio_reseau(.)
+#     get_links_from_rjdh(.)
 #   
 #   data_list[[i]] <- new_links
 #   
@@ -55,21 +55,21 @@ get_links_from_radio_reseau <- function(url){
 # # Remove NULLs first
 # data_list <- data_list[lengths(data_list) != 0]
 # 
-# all_links_radio_reseau <- data_list %>%
+# all_links_rjdh <- data_list %>%
 #   do.call(rbind, .) %>%
 #   data.frame("url" = .) %>%
 #   tibble() %>%
 #   distinct(link, .keep_all = TRUE)
 
 # Save URLs as a csv
-#write_csv(all_links_radio_reseau, "data-raw/Radio/radio_all_links_radioreseau_1.csv")
+#write_csv(all_links_rjdh, "data-raw/Radio/radio_all_links_rjdh_1.csv")
 
 ## Then scrape articles ----
 
 # Scrape each article with their url
-scrape_radio_reseau_article <- function(url){
+scrape_rjdh_article <- function(url){
   
-  #url <- all_links_radio_reseau$link[1]
+  #url <- all_links_rjdh$link[1]
   
   article_html <- read_html(url)
   
@@ -99,12 +99,12 @@ scrape_radio_reseau_article <- function(url){
 }
 
 # Read links
-all_links_radion_reseau <- read_csv("data-raw/Radio/radio_all_links_radioreseau_0.csv")
+all_links_rjdh <- read_csv("data-raw/Radio/radio_all_links_rjdh_0.csv")
 
 # Map across to scrape articles
-articles_radio_reseau <- map_df_progress(all_links_radion_reseau$link, scrape_radio_reseau_article)
+articles_rjdh <- map_df_progress(all_links_rjdh$link, scrape_rjdh_article)
 
 # Save articles
-#write_csv(articles_radio_reseau, "data-raw/Radio/radio_articles_radioreseau_0.csv")
+#write_csv(articles_rjdh, "data-raw/Radio/radio_articles_rjdh_0.csv")
 
 
