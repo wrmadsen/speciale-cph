@@ -101,6 +101,8 @@ recode_ngrams <- function(tokens, ngrams_to_recode){
   #tokens <- master_tokens_stemmed
   
   # Change names of named vector to recode
+  # Names are the ones that match
+  # Values = replacements
   names(ngrams_to_recode) <- paste0("^", names(ngrams_to_recode), "$")
   
   # Create replacement ngrams
@@ -154,7 +156,7 @@ convert_dfm_to_tibble <- function(dfm, dt){
 # And add political orientation variable
 russian_outlets <- c("Radio Lengo Songo", "Ndjoni Sango")
 
-master_text <- bind_rows(radio_master, digital_master) %>%
+master_text <- bind_rows(master_radio, master_digital) %>%
   arrange(group, date) %>%
   mutate(orient = if_else(sub_group %in% russian_outlets, "Pro-Russia", "Other")) %>%
   select(orient, everything())
@@ -179,6 +181,18 @@ master_text_tidied <- master_text %>%
          text = tolower(text),
          text = find_and_remove_repeated_substring(text))
 
+# Replace certain number-strings
+# If these were not taken care of,
+# 3r would become "r" after removing the number, for example
+number_strings <- c("\\b3r\\b" = "threer",
+                    "\\b3 r\\b" = "threer",
+                    "cod 2020" = "la coalition de l opposition democratique",
+                    "cod2020" = "la coalition de l opposition democratique")
+
+master_text_tidied$text <- str_replace_all(master_text_tidied$text,
+                                           number_strings,
+                                           names(number_strings))
+
 ## Add underscores and convert to dt -----
 master_dt <- master_text_tidied %>%
   mutate(text = add_underscores_ngrams_before_tokenizing(text, n_grams_to_keep_vector)) %>%
@@ -186,11 +200,10 @@ master_dt <- master_text_tidied %>%
 
 ## Create tokens ----
 master_tokens <- master_dt %>%
+  # Must remove number with gsub()
+  # because create_tokens() only removes only-number tokens
+  mutate(text = gsub("[0-9]+", "", text)) %>%
   create_tokens(., bbalet)
-
-# Drop if less than two characters
-# master_tokens %>%
-#   tokens_select(., min_nchar = 2) %>% types
 
 ## Stem tokens -----
 master_tokens_stemmed <- master_tokens %>%
@@ -200,21 +213,26 @@ master_tokens_stemmed <- master_tokens %>%
 master_tokens_stemmed <- master_tokens_stemmed %>%
   recode_ngrams(., ngrams_to_recode)
 
-## Trim stemmed dfm ----
-# By document frequency
+## Create dfm ----
 master_dfm <- master_tokens_stemmed %>%
-  create_dfm() %>%
-  # Remove tokens by count
-  # Must have minimum term count
-  # But maximum document count
+  create_dfm()
+
+## Trim dfm ----
+# Minimum
+master_dfm <- master_dfm %>%
   dfm_trim(.,
            min_docfreq = 0.005,
-           max_docfreq = 0.2,
            docfreq_type = "prop")
 
 # Must have at least two character (e.g. "or")
 master_dfm <- master_dfm %>%
   dfm_select(., min_nchar = 2)
+
+# Maximum
+master_dfm <- master_dfm %>%
+  dfm_trim(.,
+         max_docfreq = 0.2,
+         docfreq_type = "prop")
 
 # Summary
 master_dfm
@@ -226,9 +244,6 @@ master_dfm_tf_idf <- master_dfm %>%
 ## To tibble -----
 master_tokens_tbl <- master_dfm %>%
   convert_dfm_to_tibble(., master_dt)
-
-
-
 
 
 
@@ -264,7 +279,7 @@ master_tokens_tbl %>%
 master_tokens_tbl %>%
   #filter(token == "touad") %>%
   filter(grepl("abdoulay", token)) %>%
-  select(text_nchar, text_og, token) %>%
+  select(text_nchar, token) %>%
   filter(text_nchar < 1000) %>%
   slice_sample(n = 10) %>%
   arrange(text_nchar) #%>% view("token")
