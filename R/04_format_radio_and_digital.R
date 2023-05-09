@@ -146,10 +146,11 @@ radio_raw_binded <- bind_rows(
            date = str_replace_all(date, fr_to_en_months),
            date = as.Date(date, "%B %d, %Y"),
            # Remove author of post
-           body = gsub(authors_to_remove_from_lengo_songo, "", body)),
-  # Radio Reseau des journalistes
+           body = gsub(authors_to_remove_from_lengo_songo, "", body),
+           body = gsub("Lengo Songo|Radio", "", body)),
+  # Radio RJDH, Reseau des journalistes
   radio_raw %>%
-    filter(sub_group == "Reseau des journalistes") %>%
+    filter(sub_group == "RJDH") %>%
     mutate(date = gsub("\n\t\t\t\t", "", date),
            dateog2 = date,
            date = gsub(" ..\\:..$", "", date),
@@ -186,13 +187,13 @@ radio <- radio_raw_binded %>%
 # Test before tidying above
 # Authors (at the end of string Lengo)
 radio %>%
-  filter(sub_group == "Radio Ndeke Luka") %>%
+  #filter(sub_group == "Radio Lengo Songo") %>%
   select(url, text_nchar, text) %>%
   filter(text_nchar > 100) %>%
-  arrange(text_nchar) #%>% #view
+  arrange(text_nchar) %>%
 # transmute(text = substr(text, nchar(text)-50, nchar(text))) %>%
-#   slice_sample(n = 50) %>%
-#   #arrange(text_nchar) %>% view
+  slice_sample(n = 50) %>%
+  arrange(text_nchar) #%>% view
 #   print(n = 300)
 
 # Rename
@@ -217,7 +218,7 @@ digital_raw_binded <- bind_rows(
            # Remove city and date of post and media name, website, "Source"
            # Topics in title (Afrique, RCA, etc.)
            title = gsub("RCA:|RCA :|Afrique:|.+:", "", title),
-           body = gsub("Bangui.+\\(Ndjoni Sango\\)|Ndjoni-Sango.+\\:|Ndjoni-Sango|ndjonisango|Source", "", body)
+           body = gsub("Bangui.+\\(Ndjoni Sango\\)|Ndjoni-Sango.+\\:|Ndjoni Sango|Ndjoni-Sango|ndjonisango|Source|Fait à Bangui", "", body)
     )
 )
 
@@ -244,7 +245,7 @@ digital %>%
   #transmute(body = substr(body, nchar(body)-50, nchar(body))) %>%
   select(text_nchar, text) %>%
   filter(text_nchar < 1100 & text_nchar > 900) %>%
-  slice_sample(n = 300)
+  slice_sample(n = 300) #%>% view()
 
 digital_master <- digital
 
