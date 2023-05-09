@@ -47,7 +47,7 @@ remove_patterns_in_post <- function(input){
               "\\!", "\\?", "・",
               "l'", "L'", "L’", "l’",
               "d'", "D'", "D’", "d’",
-              "-", "<", "[", ".", "]", ">",
+              "<", "[", ".", "]", ">",
               "«", "»",
               "=")
   
@@ -57,19 +57,20 @@ remove_patterns_in_post <- function(input){
   # http, URLs
   urls <- c("http.*", "https.*")
   
-  # Numbers, digits
-  digits <- c("[0-9]+")
-  
   # Combine those that are to be removed completely
-  remove_completely <- c(random, digits, quotes, urls) %>% paste0(., collapse = "|")
+  remove_completely <- c(random, quotes, urls) 
+  remove_completely <- paste0(remove_completely, collapse = "|")
   
   # Replace some with space
-  replace_w_spaces <- paste("\\_", "\\-", sep = "|")
+  replace_w_spaces <- c("\\_", "\\-", "\\—")
+  replace_w_spaces <- paste0(replace_w_spaces, collapse = "|")
   
   # Remove and replace
-  input %>%
+  output <- input %>%
     gsub(remove_completely, "", .) %>%
     gsub(replace_w_spaces, " ", .)
+  
+  output
   
 }
 
@@ -107,7 +108,7 @@ crimson_red <- "#DC143C"
 colours_groups <- c("Ndjoni Sango" = crimson_red,
                     "Radio Lengo Songo" = red_speciale,
                     "Radio Ndeke Luka" = greenl_speciale,
-                    "Reseau des journalistes" = greend_speciale,
+                    "RJDH" = greend_speciale,
                     "Non-Russian total" = greenm_speciale,
                     "Non-Russian average" = greenm_speciale,
                     "Pro-Russian total" = red_speciale,
@@ -117,19 +118,19 @@ colours_groups <- c("Ndjoni Sango" = crimson_red,
 bw_colours_groups <- c("Ndjoni Sango" = "black",
                        "Radio Lengo Songo" = "grey5",
                        "Radio Ndeke Luka" = "grey70",
-                       "Reseau des journalistes" = "grey80")
+                       "RJDH" = "grey80")
 
 # http://sape.inf.usi.ch/quick-reference/ggplot2/linetype
 lines_group <- c("Ndjoni Sango" = "solid",
                  "Radio Lengo Songo" = "dashed",
                  "Radio Ndeke Luka" = "solid",
-                 "Reseau des journalistes" = "dashed")
+                 "RJDH" = "dashed")
 
 # http://sape.inf.usi.ch/quick-reference/ggplot2/shape
 points_group <- c("Ndjoni Sango" = 16,
                   "Radio Lengo Songo" = 17,
                   "Radio Ndeke Luka" = 5,
-                  "Reseau des journalistes" = 6)
+                  "RJDH" = 6)
 
 # Annotation size ----
 # when text size

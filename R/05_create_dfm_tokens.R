@@ -2,159 +2,43 @@
 
 # Create functions ----
 
-# Strings to recode and avoid stemming ----
-# Only those with more than one word included here
-# Others 1-word tokens, which should be joined with two-words
-# can be fixed by recoding after tokenization
-names <- c("don kibarou",
-           "don kibaru",
-           "abdoulaye diop",
-           # politicians
-           "modibo keita",
-           "vladimir poutine",
-           #"poutine", # uncomment to test (comment out later)
-           #"vladimir",
-           "joe biden",
-           #"joe",
-           "abdoulaye maiga",
-           "choguel kokalla maiga",
-           "choguel kokala maiga",
-           "choguel maiga",
-           #"choguel",
-           "oumar mariko",
-           "sekou tounkarasi",
-           "aboubacar sidiki fomba",
-           "diakaridia dao bla", # URD activist
-           "diakaridia dao",
-           "gouagnon coulibaly", # URD leader
-           "abdoulaye maga",
-           "assimi goita", # interim Mali president
-           "assimi gota",
-           "assimi goïta",
-           #"assim",
-           #"damiba",
-           "paul henri damiba",
-           "ibrahim traore",
-           "ibrahime traore",
-           "alassane ouattara",
-           "alassane dramane ouattara",
-           "moussa traore",
-           # Yerewolo
-           "drissa meminta",
-           "ben le cerveau",
-           "adama ben diarra",
-           "adama diarra",
-           "adama ben",
-           "ben diarra",
-           "sidiki kouyate",
-           # influencers/random
-           "issa cisse",
-           "aziz traore",
-           "boubou mabel diawara",
-           "boubou mabel",
-           "franklin nyamsi",
-           "biton coulibaly",
-           "djo balla sitan den tro",
-           "citoyen burkim biiya",
-           "gandhi malien",
-           "balayira officiel",
-           "balayira la",
-           "niambele sadio",
-           "souley deparis b",
-           "aziz maiga ne ment",
-           "seydou oumar traore",
-           "malick konate",
-           "boubou lah",
-           # Religious, sheiks, imams, etc.
-           "masjid salam badalabougou",
-           "cheick oumar keita",
-           "keita cheick oumar",
-           "cheick abdoulaye kounta",
-           "cheick aboubacar kourechi",
-           "cheick modibo diarra",
-           "cheick mamadou konate",
-           "cheick mahi ibrahim",
-           "cheick oumar konare",
-           "cheick tihami haidara",
-           "cheick abdoul aziz coulibaly",
-           "cheick abdoul aziz",
-           "cheick farouk",
-           "imam mahamoud dicko",
-           "imam mahmoud dicko",
-           "imam dicko",
-           # dont know
-           "kati sebenikoro" # journalist? https://www.youtube.com/watch?v=g2liUeCpz-Q&ab_channel=OuvertureM%C3%A9dia-OM
-           
-)
-
-countries <- c("cte divoire",
-               "cote divoire",
-               "cote d ivoire",
-               "cote ivoir",
-               "cote ivoire",
-               "burkina faso",
-               "burkina fasso",
-               # "burkina",
-               # "france",
-               # "russia",
-               # "guinee",
-               # "russie",
-               # "allemagne",
-               "union africaine",
-               "etats unis",
-               "union europeene",
-               #"mali",
-               "nations unies")
-
-groups <- c("coalition des mouvements de lazawad",
-            "yerewolo debout sur les remparts",
-            "lac debo tv",
-            "joliba fm",
-            "ndjoni sango",
-            "radio ndeke luka",
-            "lengo songo",
-            #"wagner",
-            "ouverture media",
-            "actuel media",
-            "amina media",
-            "ad media mali",
-            "media info afrique",
-            "songhoi media",
-            "mouvement m naaba wobgo",
-            "media presse mali officiel",
-            "baoule fm  mhz   bamako",
-            "bmd media")
-
-phrases <- c(#"was live"
-)
+# N-gram strings that should not be split nor stemmed
+n_grams_to_keep <- n_grams_to_keep_raw %>%
+  select(-explanation)
 
 # Create named vector
-strings_to_recode <- c(names, countries, groups, phrases) %>%
-  tibble(old = .) %>%
-  mutate(new = gsub(" ", "_", old)) %>%
-         #new = paste0(new, "_") # why at the end?
-  # to named vector
+n_grams_to_keep_vector <- n_grams_to_keep %>%
+  pivot_longer(cols = c(1:ncol(.))) %>%
+  filter(!is.na(value)) %>%
+  select(-name) %>%
+  # Between so that tokens are not split
+  # After to reject stemming
+  transmute(before = value,
+            new = gsub(" ", "_", before),
+            new = paste0(new, "_")) %>%
   deframe()
 
-## Recode function certain strings before tokenizing
-# Ensures that these strings are kept together
-# Includes names (first and last name for example), organisations,
-# countries, etc.
+names(n_grams_to_keep_vector) <- paste0("\\b", names(n_grams_to_keep_vector), "\\b")
+
+## Add underscores to ngrams before tokenizing
+# Ensures that these ngrams are kept together
 # Replace spaces with "_" to keep each as one token
-recode_strings_before_tokenizing <- function(strings_to_recode, input){
+# Problem is that centrafrique matches with "ue" (union europeene)
+add_underscores_ngrams_before_tokenizing <- function(input, n_grams_to_keep_vector){
   
   # Replace
+  output <- str_replace_all(input, n_grams_to_keep_vector)
+  
   # Remove double "__"
-  input %>%
-    mutate(text = str_replace_all(text, strings_to_recode),
-           text = gsub("__", "_", text))
+  output <- gsub("__|___", "_", output)
+  
+  # Return
+  output
   
 }
 
 ## Find and remove repeated substrings
 find_and_remove_repeated_substring <- function(input){
-  
-  #input <- "assemblee generale de yerewoloassemblee generale de yerewolo"
   
   gsub("^(.*)\\1$", "\\1", input)
   
@@ -164,31 +48,27 @@ find_and_remove_repeated_substring <- function(input){
 # To work faster
 convert_to_dt <- function(input){
   
+  # No need to arrange if done before
   input %>%
-    arrange(group, date) %>%
     mutate(document = paste0("text", row_number())) %>%
     as.data.table()
   
 }
 
-# Create tokens ----
-
 ## Create and clean tokens
 create_tokens <- function(dt, bbalet){
-  
-  # Test
-  #dt <- master_dt
   
   # Create corpus
   corpus <- corpus(dt$text, docvars = dt)
   
   # Tokenise tweets
   # Remove various characters
-  tokens <- quanteda::tokens(corpus,
-                             remove_punct = TRUE,
-                             remove_symbols = TRUE,
-                             remove_numbers = TRUE,
-                             remove_url = TRUE)
+  tokens_w_stopwords <- quanteda::tokens(corpus,
+                                         remove_punct = TRUE,
+                                         remove_symbols = TRUE,
+                                         remove_numbers = TRUE,
+                                         remove_url = TRUE
+  )
   
   # Format stopwords (remove accents)
   french_stopwords <- stopwords(language = "fr") %>%
@@ -196,67 +76,37 @@ create_tokens <- function(dt, bbalet){
   
   # Remove stopwords before stemming the tokens
   # Also remove more stopwords (bbalet set of stopwords))
-  tokens <- tokens_remove(tokens, pattern = french_stopwords)
-  tokens <- tokens_remove(tokens, pattern = bbalet$word)
-
-  tokens
+  tokens_without <- tokens_remove(tokens_w_stopwords, pattern = french_stopwords)
+  tokens_without <- tokens_remove(tokens_without, pattern = bbalet$word)
+  
+  # Return
+  tokens_without
   
 }
 
-tokens_to_recode <- c(
-  # countries
-  "🇲🇱" = "mal",
-  "🇨🇮" = "cote divoire",
-  "🇧🇫" = "burkina faso",
-  "burkina fasso" = "burkina faso",
-  "burkina" = "burkina faso",
-  "burkinafaso" = "burkina faso",
-  "🇫🇷" = "franc",
-  "🇷🇺" = "russ",
-  "🇺🇳" = "nations unies",
-  "🇬🇳" = "guinee",
-  "🇪🇺" = "union europeenne",
-  "lafriqu" = "afriqu",
-  "afrik" = "afriqu",
-  "dafriqu" = "afriqu",
-  # organisations
-  "minusm" = "minusma",
-  # names
-  "diakaridia dao" = "diakaridia dao bla",
-  "assim" = "assimi goita",
-  "don kibaru" = "don kibarou",
-  "keita cheick oumar" = "cheick oumar keita",
-  "choguel kokala maiga" = "choguel kokalla maiga",
-  "choguel" = "choguel kokalla maiga",
-  "choguel maiga" = "choguel kokalla maiga",
-  "boubou mabel" = "boubou mabel diawara",
-  "vladimir poutine" = "poutin",
-  #"vladim" = "poutin",
-  # ben le cerveau
-  "adama ben diarra" = "ben le cerveau",
-  "adama diarra" = "ben le cerveau",
-  "adama ben" = "ben le cerveau",
-  "ben diarra" = "ben le cerveau",
-  "ouattar" = "alassane ouattara",
-  "yerewolo" = "yerewolo debout sur les remparts",
-  "imam mahamoud dicko" = "imam dicko",
-  "imam mahmoud dicko" = "imam dicko")
+ngrams_to_recode <- n_grams_to_keep %>%
+  mutate(main_2 = main) %>%
+  pivot_longer(cols = c(2:ncol(.))) %>%
+  select(value, main) %>%
+  filter(!is.na(value)) %>%
+  mutate(value = gsub(" ", "_", value),
+         value = paste0(value, "_")) %>%
+  #select(main, value) %>%
+  deframe()
 
-# Replace/recode tokens
-replace_tokens <- function(tokens, tokens_to_recode){
+# Recode ngrams
+recode_ngrams <- function(tokens, ngrams_to_recode){
   
   # Test
-  #tokens <- master_tokens
+  #tokens <- master_tokens_stemmed
   
-  # Change names of named vector to replace
-  names(tokens_to_recode) <- paste0("^", names(tokens_to_recode), "$")
+  # Change names of named vector to recode
+  names(ngrams_to_recode) <- paste0("^", names(ngrams_to_recode), "$")
   
-  # Create replacement tokens
+  # Create replacement ngrams
   # No underscores, no whitespace at the end
   replacement_tokens <- types(tokens) %>%
-    stringi::stri_replace_all_regex(., "\\_", " ") %>%
-    stringi::stri_replace_all_regex(., " $", "") %>%
-    str_replace_all(., tokens_to_recode)
+    str_replace_all(., ngrams_to_recode)
   
   tokens <- tokens_replace(tokens, 
                            pattern = types(tokens), 
@@ -268,7 +118,6 @@ replace_tokens <- function(tokens, tokens_to_recode){
   
 }
 
-# Create dfm ----
 ## Create dfm from tokens
 create_dfm <- function(tokens){
   
@@ -301,76 +150,87 @@ convert_dfm_to_tibble <- function(dfm, dt){
 }
 
 # Format before running functions ----
-# Bind digital and radio ----
+## Bind digital and radio ----
 # And add political orientation variable
 russian_outlets <- c("Radio Lengo Songo", "Ndjoni Sango")
 
 master_text <- bind_rows(radio_master, digital_master) %>%
+  arrange(group, date) %>%
   mutate(orient = if_else(sub_group %in% russian_outlets, "Pro-Russia", "Other")) %>%
   select(orient, everything())
 
 # Join spikes periods
-master_text <-master_text %>%
+master_text <- master_text %>%
   left_join(spike_periods_to_join) %>%
   mutate(spike_no = if_else(is.na(spike_no), 0, spike_no), 
          spike_binary = if_else(spike_no > 0, 1, 0) %>% as.factor)
 
 # Drop with less than 200 characters
-master_text %>%
-  filter(text_nchar < 200) %>% select(text, url) #%>% view
-
 master_text <- master_text %>%
   filter(text_nchar >= 200)
 
 # Run functions ----
-master_dt <- master_text %>%
-  mutate(text = gsub("'|'|’|’", " ", text),
-         text = str_squish(text),
+## Tidy text ----
+master_text_tidied <- master_text %>%
+  mutate(text = gsub("'|'|’|’|-", " ", text),
          text = remove_patterns_in_post(text),
+         text = str_squish(text),
          text = remove_accents(text),
          text = tolower(text),
-         text = find_and_remove_repeated_substring(text)) %>%
-  recode_strings_before_tokenizing(strings_to_recode, .) %>%
+         text = find_and_remove_repeated_substring(text))
+
+## Add underscores and convert to dt -----
+master_dt <- master_text_tidied %>%
+  mutate(text = add_underscores_ngrams_before_tokenizing(text, n_grams_to_keep_vector)) %>%
   convert_to_dt()
 
-# Remove certain patterns from text
-patterns_to_remove <- c("radio_ndeke_luka",
-                        "lengo_songo",
-                        "ndjoni_sango",
-                        "net",
-                        "cest")
-
-patterns_to_remove <- patterns_to_remove %>%
-  paste0(., collapse = "|")
-
+## Create tokens ----
 master_tokens <- master_dt %>%
-  create_tokens(., bbalet) %>%
-  # At least two character length
-  tokens_select(., min_nchar = 2)
+  create_tokens(., bbalet)
 
-# Stem tokens
+# Drop if less than two characters
+# master_tokens %>%
+#   tokens_select(., min_nchar = 2) %>% types
+
+## Stem tokens -----
 master_tokens_stemmed <- master_tokens %>%
   tokens_wordstem(., language = "fr")
 
-# Replace tokens
+## Recode tokens ----
 master_tokens_stemmed <- master_tokens_stemmed %>%
-  replace_tokens(., tokens_to_recode)
+  recode_ngrams(., ngrams_to_recode)
 
-master_dfm <- master_tokens %>%
+## Trim stemmed dfm ----
+# By document frequency
+master_dfm <- master_tokens_stemmed %>%
   create_dfm() %>%
   # Remove tokens by count
   # Must have minimum term count
   # But maximum document count
   dfm_trim(.,
-           min_docfreq = 0.01,
-           #max_docfreq = 0.20,
+           min_docfreq = 0.005,
+           max_docfreq = 0.2,
            docfreq_type = "prop")
 
+# Must have at least two character (e.g. "or")
+master_dfm <- master_dfm %>%
+  dfm_select(., min_nchar = 2)
+
+# Summary
+master_dfm
+
+## Dfm to tf-idf -----
 master_dfm_tf_idf <- master_dfm %>%
   dfm_tfidf()
 
+## To tibble -----
 master_tokens_tbl <- master_dfm %>%
   convert_dfm_to_tibble(., master_dt)
+
+
+
+
+
 
 # Print or view ----
 
@@ -381,22 +241,55 @@ popular_tokens <- topfeatures(master_dfm, n = 1000) %>%
   tibble() %>%
   rename("count" = ".")
 
+popular_tokens$token %>% .[1:10] %>% paste0(., collapse = "‚ ")
+
 reference_tokens <- tibble(non_stemmed = master_tokens %>% as.character(),
                            stemmed = master_tokens_stemmed %>% as.character()) %>%
   distinct()
 
 popular_tokens <- left_join(popular_tokens, reference_tokens, by = c("token" = "stemmed"))
 
-popular_tokens
+popular_tokens %>%
+  nest(non_stemmed) %>%
+  mutate(non_stemmed = paste0(data) %>% gsub("list\\(non_stemmed = c\\(|\\,", "", .))
 
+
+# Count per token
 master_tokens_tbl %>%
   group_by(token) %>%
   summarise(n = n()) %>%
   arrange(-n) #%>% view("count")
 
 # Check individual tokens with view()
-master_tokens_tbl %>% filter(token == "ndjon") %>%
+master_tokens_tbl %>%
+  #filter(token == "touad") %>%
+  filter(grepl("abdoulay", token)) %>%
+  select(text_nchar, text_og, token) %>%
+  filter(text_nchar < 1000) %>%
+  slice_sample(n = 10) %>%
   arrange(text_nchar) #%>% view("token")
+
+
+# TESTING ----
+# Sample to find n-grams
+# master_text_tidied %>%
+#   filter(text_nchar < 800) %>%
+#   group_by(sub_group) %>%
+#   #slice_sample(n = 1000) %>%
+#   arrange(text_nchar) %>%
+#   select(text)
+
+# Add underscores to n-grams
+# Subset to test out
+# master_text_tidied_test <- master_text_tidied %>%
+#   filter(text_nchar < 800) %>%
+#   slice_sample(n = 200) %>%
+#   filter(grepl("titorenko", text))
+
+# Check that ngrams have been recoded correctly
+topfeatures(master_dfm, 10)
+
+types(master_tokens_stemmed) %>% length()
 
 
 

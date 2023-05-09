@@ -11,7 +11,7 @@ read_bind_radio <- function(files){
            sub_group = recode(sub_group,
                               "radiondekeluka" = "Radio Ndeke Luka",
                               "radiolengo" = "Radio Lengo Songo",
-                              "radioreseau" = "Reseau des journalistes"
+                              "rjdh" = "RJDH"
            ))
   
 }
@@ -70,6 +70,9 @@ feel_raw <- read_delim("data-raw/Sentiment/FEEL.csv", delim = ";")
 # French stopwords
 # https://github.com/stopwords-iso/stopwords-fr
 bbalet_raw <- read_table("data-raw/Sentiment/bbalet_stopwords_fr.txt")
+
+# N-grams from Excel sheet ----
+n_grams_to_keep_raw <- read_excel("data-raw/n_grams_recoding.xlsx", skip = 3)
 
 # Load litt review data -----
 # Lock
