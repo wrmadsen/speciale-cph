@@ -2,7 +2,9 @@
 
 # Run model with covariates ----
 ## Fit multiple models to find optimal K ----
-values_of_k <- c(10, 20, 30, 40, 50, 60, 70)
+values_of_k <- c(10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70)
+
+# Prepare loop
 n <- length(values_of_k)
 many_models_one = list()
 many_models_one = vector("list", length = n)
@@ -29,7 +31,7 @@ for (i in 1:n) {
 }
 
 # Save models
-save(many_models_one, file = "output/many_models_one.Rdata")
+#save(many_models_one, file = "output/many_models_one.Rdata")
 load("output/many_models_one.Rdata")
 
 # Calculate
@@ -65,7 +67,7 @@ results_of_k %>%
   pivot_longer(names_to = "Metric", values_to = "Value", -K) %>%
   ggplot(aes(x = K, y = Value)) +
   geom_line(linewidth = 1.5, alpha = 0.7, show.legend = FALSE) +
-  geom_vline(xintercept = 40, linewidth = 2) +
+  geom_vline(xintercept = 30, linewidth = 2) +
   facet_wrap(~Metric, scales = "free_y") +
   labs(x = "K (the number of topics)",
        y = NULL,
@@ -74,12 +76,13 @@ results_of_k %>%
 
 save_plot_speciale("output-figures/exclusivity_semantic_coherence.png")
 
-## Select model -----
-master_stm <- many_models_one[[4]]
+# Analyse model -----
+(master_stm <- many_models_one[[5]])
 
-number_of_topics <- master_stm$settings$dim$K
+#save(master_stm, file = "output/master_stm.Rdata")
+load("output/master_stm.Rdata")
 
-# Check model ----
+(number_of_topics <- master_stm$settings$dim$K)
 
 # Extract the matrix of words with highest frex scores
 topic_labels_matrix <- labelTopics(master_stm, n = 10)$frex
@@ -149,7 +152,7 @@ data_for_plot <- master_dt_thetas_long %>%
   ungroup()
 
 # Plot
-# Top 10 by media 
+# Top ten topics by media 
 data_for_plot %>%
   #mutate(colour_of_bars = if_else(topic %in% c("Topic 13"), 1, 0) %>% as.factor) %>%
   #mutate(name = gsub("(.{23})\\_(.*)", "\\1\n\\2", name)) %>%
