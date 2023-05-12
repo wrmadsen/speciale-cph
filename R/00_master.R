@@ -41,11 +41,5 @@ load("data-formatted/formatted_data.RData")
 
 # Plot ----
 
-#source("R/20_plot_descriptive.R")
 
-source("R/21_plot_media_spikes.R")
-
-source("R/22_prepare_token_plots.R")
-
-source("R/23_plot_tokens.R")
 
