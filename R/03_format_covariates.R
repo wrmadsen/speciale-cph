@@ -130,6 +130,22 @@ production <- production_raw %>%
   pivot_longer(cols = c(2:ncol(.)), names_to = "year")
 
 
+# Format AidData ----
+aiddata <- aiddata_raw %>%
+  clean_names() %>%
+  filter(recipient == "Central African Republic")
+
+# Number of projects
+nrow(aiddata)
+
+# Total sum
+aiddata %>%
+  filter(recommended_for_aggregates == "Yes") %>%
+  summarise(sum = sum(amount_constant_usd2017, na.rm = TRUE))
+
+
+
+
 
 
 

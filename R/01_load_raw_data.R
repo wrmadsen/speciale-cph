@@ -67,7 +67,7 @@ gadm_raw <- list.files(pattern = "1.shp", recursive = TRUE) %>%
 # http://advanse.lirmm.fr/feel.php
 feel_raw <- read_delim("data-raw/Sentiment/FEEL.csv", delim = ";")
 
-# French stopwords
+# French stopwords ----- 
 # https://github.com/stopwords-iso/stopwords-fr
 bbalet_raw <- read_table("data-raw/Sentiment/bbalet_stopwords_fr.txt")
 
@@ -100,5 +100,8 @@ car_mines_carbon_raw <- read_sf("data-raw/Mines-CAR/hydrocarbon-black.shp")
 production_raw <- read_excel("data-raw/Mines-CAR/Mining stats CAR Manual.xlsx", skip = 1)
 
 
-
+# AidData ----
+# https://www.aiddata.org/data/aiddatas-global-chinese-development-finance-dataset-version-2-0
+aiddata_raw <- read_excel("data-raw/Andet/AidDatas_Global_Chinese_Development_Finance_Dataset_Version_2_0/AidDatasGlobalChineseDevelopmentFinanceDataset_v2.0.xlsx",
+                          sheet = "Global_CDF2.0")
 
