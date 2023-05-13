@@ -1,14 +1,14 @@
 # Format covariates
 
 # Spikes periods ----
-spike_periods_to_join <- spike_periods %>%
-  rowwise() %>%
-  mutate(date = list(seq.Date(date_min,
-                              date_max,
-                              by = "1 day"))
-  ) %>%
-  tidyr::unnest(date) %>%
-  select(spike_no, spike_text = text, date)
+# spike_periods_to_join <- spike_periods %>%
+#   rowwise() %>%
+#   mutate(date = list(seq.Date(date_min,
+#                               date_max,
+#                               by = "1 day"))
+#   ) %>%
+#   tidyr::unnest(date) %>%
+#   select(spike_no, spike_text = text, date)
 
 # Sub-national boundaries ----
 gadm <- gadm_raw %>%
@@ -82,10 +82,10 @@ afinn <- afinn_raw %>%
 
 # Check if AFINN has multiple scores per its stemmed token
 # This is solved by taking its median (above)
-afinn %>%
-  group_by(stemmed, token) %>%
-  filter(n() > 1) %>%
-  arrange(stemmed)
+# afinn %>%
+#   group_by(stemmed, token) %>%
+#   filter(n() > 1) %>%
+#   arrange(stemmed)
 
 # Format French stopwords -----
 # Remove accents and stem
