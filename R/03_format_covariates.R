@@ -56,17 +56,36 @@ gadm_simp <- gadm_simp %>%
 
 # Remove accents and stem
 feel <- feel_raw %>%
-  transmute(text = remove_accents(word),
-            text = remove_patterns_in_post(text),
+  transmute(token = word,
+            token = remove_accents(token),
+            token = remove_patterns_in_post(token),
             score = case_when(polarity == "positive" ~ 1,
-                              polarity == "negative" ~ -1)
-  ) %>%
-  filter(!grepl("\\s", text))
+                              polarity == "negative" ~ -1)) %>%
+  filter(!grepl("\\s", token)) %>%
+  # Stem words
+  mutate(token = char_wordstem(token, language = "fr"),
+         token = stri_trans_general(str = token, id = "Latin-ASCII"))
 
-# Stem words
-feel <- feel %>%
-  mutate(text = char_wordstem(text, language = "fr"),
-         text = stri_trans_general(str = text, id = "Latin-ASCII"))
+
+# Format AFINN sentiment -----
+# Format
+afinn <- afinn_raw %>%
+  mutate(token = remove_accents(token),
+         token = remove_patterns_in_post(token)) %>%
+  filter(!grepl("\\s", token)) %>%
+  # Stem words
+  mutate(token = char_wordstem(token, language = "fr"),
+         token = stri_trans_general(str = token, id = "Latin-ASCII")) %>%
+  # Calculate median
+  group_by(token) %>%
+  summarise(afinn = median(afinn))
+
+# Check if AFINN has multiple scores per its stemmed token
+# This is solved by taking its median (above)
+afinn %>%
+  group_by(stemmed, token) %>%
+  filter(n() > 1) %>%
+  arrange(stemmed)
 
 # Format French stopwords -----
 # Remove accents and stem
