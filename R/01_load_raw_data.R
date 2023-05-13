@@ -37,7 +37,7 @@ digital_raw <- list.files(pattern = "digital_articles.+\\.csv", recursive = TRUE
   map_df(read_bind_digital)
 
 # Spike periods data ----
-spike_periods <- read_csv("output/spike_periods.csv")
+#spike_periods <- read_csv("output/spike_periods.csv")
 
 # Twitter data ----
 # By keywords
@@ -77,7 +77,7 @@ afinn_raw <- read_delim("data-raw/Sentiment/AFINN-fr-165.txt")
 bbalet_raw <- read_table("data-raw/Sentiment/bbalet_stopwords_fr.txt")
 
 # N-grams from Excel sheet ----
-n_grams_to_keep_raw <- read_excel("data-raw/n_grams_recoding.xlsx", skip = 3)
+n_grams_to_keep_raw <- read_excel("data-raw/n_grams_recoding_thesis.xlsx", skip = 3)
 
 # Load litt review data -----
 # Lock
