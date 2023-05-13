@@ -67,6 +67,11 @@ gadm_raw <- list.files(pattern = "1.shp", recursive = TRUE) %>%
 # http://advanse.lirmm.fr/feel.php
 feel_raw <- read_delim("data-raw/Sentiment/FEEL.csv", delim = ";")
 
+# AFINN en français -----
+# https://github.com/fnielsen/afinn/blob/master/afinn/data/AFINN-fr-165.txt
+# Finn Årup Nielsen, 2011
+afinn_raw <- read_delim("data-raw/Sentiment/AFINN-fr-165.txt")
+
 # French stopwords ----- 
 # https://github.com/stopwords-iso/stopwords-fr
 bbalet_raw <- read_table("data-raw/Sentiment/bbalet_stopwords_fr.txt")
