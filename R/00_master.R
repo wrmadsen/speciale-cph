@@ -23,21 +23,11 @@ source("R/01_load_raw_data.R", verbose = TRUE)
 # 
 # source("R/05_create_dfm_tokens.R")
 # 
-# source("R/06_create_token_frequency.R")
-# 
-# save(master_dt, master_dfm_tf_idf, master_dfm, master_tokens, master_tokens_tbl, feel, tokens_frequency,
+# save(master_dt, master_dfm, master_tokens, master_tokens_tbl, feel,
 #      file = "data-formatted/formatted_data.RData")
 
 # Calculations and analysis ----
 load("data-formatted/formatted_data.RData")
-
-#source("R/07_calculate_similarity.R")
-
-#source("R/08_calculate_sentiment.R")
-
-#source("R/09_run_diff_in_diff.R")
-
-#source("R/10_structural_topic_model.R")
 
 # Plot ----
 
