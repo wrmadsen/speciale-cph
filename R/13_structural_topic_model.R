@@ -2,37 +2,42 @@
 
 # Run model with covariates ----
 ## Fit multiple models to find optimal K ----
-values_of_k <- c(10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70)
+values_of_k <- c(10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60)
 
-# Prepare loop
-n <- length(values_of_k)
-many_models_one = list()
-many_models_one = vector("list", length = n)
+# Fit models with parallel approach
+library(furrr)
+library(progressr)
+library(future)
 
-for (i in 1:n) {
+plan(multisession)
+
+fit_stm <- function(values_of_k){
   
-  value_of_k <- values_of_k[i]
+  p <- progressor(steps = length(values_of_k))
   
-  model_in_loop <- stm(documents = master_dfm,
-                       prevalence = ~sub_group,
-                       K = value_of_k,
-                       seed = 12345)
-  
-  many_models_one[[i]] <- model_in_loop
-  
-  runif(1, 0.1, 0.2) %>% Sys.sleep()
-  
-  percentage_done <- i/n
-  percentage_done <- percentage_done*100
-  percentage_done <- round(percentage_done, 0)
-  
-  paste(i, "of", n, " (", percentage_done, "% done).") %>% print()
+  future_map(values_of_k,
+             ~{
+               p()
+               Sys.sleep(.2)
+               stm::stm(documents = master_dfm,
+                        prevalence = ~sub_group,
+                        K = .x,
+                        seed = 12345)
+             })
   
 }
 
+# Run
+many_models <- with_progress({
+  
+  result <- fit_stm(values_of_k)
+  
+})
+
+
 # Save models
-#save(many_models_one, file = "output/many_models_one.Rdata")
-load("output/many_models_one.Rdata")
+#save(many_models, file = "output/many_models.Rdata")
+load("output/many_models.Rdata")
 
 # Calculate
 results_of_k <- data.frame(K = values_of_k) %>%
@@ -236,7 +241,7 @@ data_for_plot %>%
                   linetype = sub_group),
               se = FALSE, linewidth = 1) +
   facet_wrap(~topic_name#, scales = "free"
-             ) +
+  ) +
   scale_colour_manual(name = "", values = colours_groups) +
   scale_linetype_manual(name = "", values = lines_group) +
   scale_x_date(labels = dateformat(), date_breaks = "12 months") +
