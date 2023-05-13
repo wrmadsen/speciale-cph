@@ -162,10 +162,10 @@ master_text <- bind_rows(master_radio, master_digital) %>%
   select(orient, everything())
 
 # Join spikes periods
-master_text <- master_text %>%
-  left_join(spike_periods_to_join) %>%
-  mutate(spike_no = if_else(is.na(spike_no), 0, spike_no), 
-         spike_binary = if_else(spike_no > 0, 1, 0) %>% as.factor)
+# master_text <- master_text %>%
+#   left_join(spike_periods_to_join) %>%
+#   mutate(spike_no = if_else(is.na(spike_no), 0, spike_no), 
+#          spike_binary = if_else(spike_no > 0, 1, 0) %>% as.factor)
 
 # Drop with less than 200 characters
 master_text <- master_text %>%
@@ -250,13 +250,11 @@ master_tokens_tbl <- master_dfm %>%
 # Print or view ----
 
 ## View most popular tokens and phrases ----
-popular_tokens <- topfeatures(master_dfm, n = 1000) %>%
+popular_tokens <- topfeatures(master_dfm, n = 10000) %>%
   data.frame() %>%
   rownames_to_column("token") %>%
   tibble() %>%
   rename("count" = ".")
-
-popular_tokens$token %>% .[1:10] %>% paste0(., collapse = "‚ ")
 
 reference_tokens <- tibble(non_stemmed = master_tokens %>% as.character(),
                            stemmed = master_tokens_stemmed %>% as.character()) %>%
@@ -264,10 +262,10 @@ reference_tokens <- tibble(non_stemmed = master_tokens %>% as.character(),
 
 popular_tokens <- left_join(popular_tokens, reference_tokens, by = c("token" = "stemmed"))
 
-popular_tokens %>%
-  nest(non_stemmed) %>%
-  mutate(non_stemmed = paste0(data) %>% gsub("list\\(non_stemmed = c\\(|\\,", "", .))
-
+popular_tokens <- popular_tokens %>%
+  nest(data = non_stemmed) %>%
+  mutate(non_stemmed = paste0(data) %>% gsub("list\\(non_stemmed = c\\(|\\,|\\|\\)|\\(", "", .)) %>%
+  select(token, non_stemmed)
 
 # Count per token
 master_tokens_tbl %>%
