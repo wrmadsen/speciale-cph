@@ -4,7 +4,7 @@
 
 # N-gram strings that should not be split nor stemmed
 n_grams_to_keep <- n_grams_to_keep_raw %>%
-  select(-explanation)
+  select(-c(explanation, category, study))
 
 # Create named vector
 n_grams_to_keep_vector <- n_grams_to_keep %>%
