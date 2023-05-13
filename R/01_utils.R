@@ -108,7 +108,7 @@ crimson_red <- "#DC143C"
 colours_groups <- c("Ndjoni Sango" = crimson_red,
                     "Radio Lengo Songo" = red_speciale,
                     "Radio Ndeke Luka" = greenl_speciale,
-                    "RJDH" = greend_speciale,
+                    "RJDH" = greenm_speciale,
                     "Non-Russian total" = greenm_speciale,
                     "Non-Russian average" = greenm_speciale,
                     "Pro-Russian total" = red_speciale,
