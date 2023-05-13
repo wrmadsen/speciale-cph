@@ -98,7 +98,7 @@ master_stm_theta <- master_stm$theta %>%
   tibble() %>%
   clean_names()
 
-names(master_stm_theta) <- paste0("Topic ", str_pad(1:number_of_topics, 2, pad = "0"))
+names(master_stm_theta) <- paste0(1:number_of_topics)
 
 # Add document number as column to thetas
 #master_dfm %>% dfm_subset(., document == "text312") # check text400 and 1012 are empty/fully sparse
@@ -112,24 +112,51 @@ master_stm_theta <- master_stm_theta %>%
 # Join theta values to master_dt
 # Ensure master_dt has same documents as master_stm
 # Due to the empty documents dropped during stm(), dfm2stm(x, docvars, omit_empty = TRUE)
+# Master_dt is introduced here in this script
 master_dt_thetas <- full_join(master_dt, master_stm_theta) %>%
   tibble()
 
 # Long version
+columns_to_pivot <- 1:30 %>% paste0()
+
 master_dt_thetas_long <- master_dt_thetas %>%
-  pivot_longer(cols = c(starts_with("Topic")), names_to = "topic", values_to = "topic_proportion")
+  pivot_longer(cols = all_of(columns_to_pivot), names_to = "topic_no", values_to = "topic_proportion") %>%
+  mutate(topic_no = as.integer(topic_no),
+         topic_name = case_match(topic_no,
+                                 16 ~ "Humanitarian concerns",
+                                 22 ~ "Defense, Touadéra",
+                                 20 ~ "Fake news",
+                                 15 ~ "Sports",
+                                 17 ~ "United Nations",
+                                 3 ~ "Culture, youth",
+                                 27 ~ "European Union",
+                                 6 ~ "Rebels, France",
+                                 11 ~ "Russian instructors",
+                                 28 ~ "Election, scrutiny",
+                                 24 ~ "Republican dialogue",
+                                 19 ~ "Referendum, court, reform",
+                                 99 ~ "At least one condition must be supplied",
+                                 .default = as.character(topic_no)))
+
+# Save those that have been named to vector for later viz
+top_topics_no <- master_dt_thetas_long %>%
+  distinct(topic_no, topic_name) %>%
+  filter(as.character(topic_no) != topic_name) %>%
+  pull(topic_no)
+
+save(master_dt_thetas_long, file = "output/master_dt_thetas_long.Rdata")
+load("output/master_dt_thetas_long.Rdata")
 
 ### Table of topics and total proportion ----
 topic_labels_space
 
 master_dt_thetas_long %>%
-  filter(sub_group != "Non-Russian total") %>%
-  group_by(topic) %>%
+  group_by(topic_name) %>%
   summarise(topic_proportion = mean(topic_proportion, na.rm = TRUE)) %>%
   ungroup() %>%
   mutate(topic_labels_space) %>%
   arrange(-topic_proportion) %>%
-  transmute(Topic = topic,
+  transmute(Topic = topic_name,
             topic_proportion = topic_proportion*100,
             topic_proportion = round(topic_proportion, 2),
             topic_labels_space) %>%
@@ -147,7 +174,7 @@ master_dt_thetas_long %>%
 ### Topic proportion total by group ----
 # Calculate 
 data_for_plot <- master_dt_thetas_long %>%
-  group_by(sub_group, topic) %>%
+  group_by(sub_group, topic_name, topic_no) %>%
   summarise(topic_proportion = mean(topic_proportion, na.rm = TRUE)*100) %>%
   ungroup()
 
@@ -161,10 +188,10 @@ data_for_plot %>%
   slice_max(n = 10, order_by = topic_proportion) %>%
   ungroup %>%
   mutate(sub_group = as.factor(sub_group),
-         topic_colour = as.factor(topic),
-         topic = reorder_within(topic, topic_proportion, sub_group)) %>%
+         topic_colour = as.factor(topic_name),
+         topic_name = reorder_within(topic_name, topic_proportion, sub_group)) %>%
   ggplot(aes(x = topic_proportion,
-             y = topic)) +
+             y = topic_name)) +
   geom_col(aes(fill = topic_colour), show.legend = FALSE) +
   facet_wrap(~sub_group, scales = "free_y") +
   #scale_fill_manual(name = "", values = colours_groups) +
@@ -177,13 +204,14 @@ data_for_plot %>%
 
 # Plot with points
 data_for_plot %>%
-  mutate(half = topic %in% paste0("Topic ", str_pad(21:40, 2, pad = "0"))) %>%
+  mutate(half = topic_no %in% c(1:15)) %>%
   ggplot(.,
          aes(x = topic_proportion,
-             y = topic)) +
-  geom_point(aes(shape = sub_group), size = 4) +
+             y = topic_name)) +
+  geom_point(aes(shape = sub_group, colour = sub_group), size = 4) +
   facet_wrap(~half, scales = "free_y") +
-  scale_shape_manual(values = points_group) +
+  scale_color_manual(name = "", values = colours_groups) +
+  scale_shape_manual(name = "", values = points_group) +
   labs(title = "Mean proportion for topics by media",
        x = NULL,
        caption = "Source: William Rohde Madsen.") +
@@ -194,27 +222,26 @@ save_plot_speciale("output-figures/topic_prop_mean_by_group.png", height = 23, w
 ### Topic proportion over time by group ----
 # Calculate
 data_for_plot <- master_dt_thetas_long %>%
-  mutate(quarter = floor_date(date, unit = "quarter")) %>%
-  group_by(sub_group, date = week, topic) %>%
+  group_by(sub_group, month, topic_name, topic_no) %>%
   summarise(topic_proportion = mean(topic_proportion)) %>%
   ungroup()
 
 # Plot
 data_for_plot %>%
-  # mutate(topic = gsub("(.{23})\\_(.*)", "\\1\n\\2", topic)) %>%
-  # filter(date > as.Date("2020-01-01")) %>%
-  filter(topic %in% c("Topic 10", "Topic 28", "Topic 12", "Topic 21", "Topic 06", "Topic 31")) %>%
-  ggplot(aes(x = date,
+  filter(year(month) >= 2020) %>%
+  filter(topic_no %in% top_topics_no) %>%
+  ggplot(aes(x = month,
              y = topic_proportion)) +
   geom_smooth(aes(colour = sub_group,
                   linetype = sub_group),
               se = FALSE, linewidth = 1) +
-  facet_wrap(~topic, scales = "free") +
-  scale_colour_manual(name = "", values = bw_colours_groups) +
+  facet_wrap(~topic_name#, scales = "free"
+             ) +
+  scale_colour_manual(name = "", values = colours_groups) +
   scale_linetype_manual(name = "", values = lines_group) +
-  scale_x_date(labels = dateformat(), date_breaks = "24 months") +
+  scale_x_date(labels = dateformat(), date_breaks = "12 months") +
   #scale_y_continuous(limits = c(0, 0.25)) +
-  labs(title = "Mean proportion of topics per week",
+  labs(title = "Mean proportion of topics per month",
        x = NULL,
        caption = "Source: William Rohde Madsen.") +
   theme_speciale +
@@ -222,210 +249,6 @@ data_for_plot %>%
   theme(legend.key.size =  unit(0.5, "in"))
 
 save_plot_speciale("output-figures/topic_prop_mean_over_time.png", height = 23, width = 30)
-
-### Plot topics 5 and 11 ----
-# Vertical lines
-vertical_lines <- bind_rows(tibble("date" = as.Date(c("2021-08-15", "2021-12-05", "2022-09-01"))) %>%
-                              mutate(topic = "Topic 05"),
-                            tibble("date" = as.Date(c("2021-07-01", "2022-08-01"))) %>%
-                              mutate(topic = "Topic 11")
-)
-
-# Plot prop per week
-data_for_plot %>%
-  filter(date >= as.Date("2020-01-01")) %>%
-  filter(topic %in% c("Topic 05", "Topic 11")) %>%
-  ggplot(aes(x = date,
-             y = topic_proportion)) +
-  geom_smooth(aes(colour = sub_group), se = FALSE, linewidth = 2) +
-  #geom_vline(data = vertical_lines, linewidth = 1.5, colour = red_speciale, linetype = 2,
-  #           aes(xintercept = date)) +
-  facet_wrap(~topic, scales = "free") +
-  scale_colour_manual(name = "", values = colours_groups) +
-  scale_x_date(labels = dateformat(), date_breaks = "6 months") +
-  labs(title = "Mean proportion of topics 5 and 11 per week",
-       x = NULL,
-       y = "Topic proportion, %",
-       caption = "Source: William Rohde Madsen.") +
-  theme_speciale
-
-#save_plot_speciale("output-figures/topic_prop_mean_over_time_specific.png")
-
-# Plot change per month
-# Topic 05
-data_for_plot_change <- data_for_plot %>%
-  filter(date >= as.Date("2021-05-01")) %>%
-  arrange(sub_group, topic, date) %>%
-  group_by(sub_group, topic) %>%
-  mutate(change = topic_proportion - lag(topic_proportion),
-         change_rel = change/topic_proportion*100) %>%
-  ungroup()
-
-data_for_plot_change %>%
-  filter(topic %in% c("Topic 05")) %>%
-  ggplot(aes(x = date,
-             y = change)) +
-  geom_smooth(aes(colour = sub_group), se = FALSE) +
-  #geom_col(aes(fill = sub_group)) +
-  geom_vline(data = vertical_lines %>% filter(topic == "Topic 06"),
-             linewidth = 1.5, colour = red_speciale, linetype = 2,
-             aes(xintercept = date)) +
-  facet_wrap(~sub_group, scales = "free") +
-  scale_colour_manual(name = "", values = colours_groups) +
-  scale_x_date(labels = dateformat(), date_breaks = "6 months") +
-  labs(title = "Change in proportion of topic 5 per week",
-       x = NULL,
-       y = "Change in proportion, %",
-       caption = "Source: William Rohde Madsen.") +
-  theme_speciale
-
-#save_plot_speciale("output/topic_prop_change_over_time_first.png")
-
-# Topic 11
-data_for_plot_change %>%
-  filter(topic %in% c("Topic 11")) %>%
-  ggplot(aes(x = date,
-             y = change_rel)) +
-  geom_col(aes(fill = sub_group)) +
-  geom_vline(data = vertical_lines %>% filter(topic == "Topic 13"),
-             linewidth = 1.5, colour = red_speciale, linetype = 2,
-             aes(xintercept = date)) +
-  facet_wrap(~sub_group, scales = "free") +
-  scale_fill_manual(name = "", values = colours_groups) +
-  scale_x_date(labels = dateformat(), date_breaks = "6 months") +
-  labs(title = "Change in proportion of topic 13 per week",
-       x = NULL,
-       y = "Change in proportion, %",
-       caption = "Source: William Rohde Madsen.") +
-  theme_speciale
-
-#save_plot_speciale("output-figures/topic_prop_change_over_time_13.png")
-
-
-
-### Difference in proportion spike_binary ------
-data_for_plot <- master_dt_thetas_long %>%
-  group_by(sub_group, topic, spike_binary) %>%
-  summarise(topic_proportion = mean(topic_proportion)) %>%
-  ungroup() %>%
-  pivot_wider(names_from = spike_binary, values_from = topic_proportion) %>%
-  clean_names() %>%
-  mutate(difference = x1 - x0)
-
-data_for_plot %>%
-  ggplot(aes(x = difference,
-             y = sub_group)) +
-  geom_col(aes(fill = sub_group)) +
-  facet_wrap(~topic) +
-  scale_fill_manual(name = "", values = colours_groups) +
-  labs(title = "Change in topic proportion for groups during spike periods",
-       x = "Change during spike periods, % points",
-       caption = "Source: William Rohde Madsen.") +
-  theme_speciale
-
-save_plot_speciale("output-figures/change_in_prop_spike_binary.png", height = 23, width = 30)
-
-# Collapse the words for each topic into a single label
-topic_labels <- apply(topic_labels_matrix, 1, paste0, collapse = "_") %>%
-  paste0(str_pad(1:15, 2, pad = "0"), "_", .) %>%
-  gsub("(.{18})\\_(.*)", "\\1\n\\2", .)
-
-topic_labels_tibble <- topic_labels %>%
-  tibble("topic_name" = .) %>%
-  mutate(topic = row_number() %>% as.factor())
-
-# Estimate effects of covariates
-# Effect of sub_group
-# 1:15 indicate the topic, thus all are included with 1:15
-prevalence_effects <- estimateEffect(formula = c(1:15) ~ sub_group*spike_binary, 
-                                     stmobj = stm_to_check,
-                                     metadata = docvars(master_dfm))
-
-
-### Plot interaction effect between spike_binary and sub_group ----
-effects_int_1 <- stminsights::get_effects(estimates = prevalence_effects,
-                                          variable = "sub_group",
-                                          type = "pointestimate",
-                                          moderator = "spike_binary",
-                                          modval = 1)
-
-effects_int_0 <- stminsights::get_effects(estimates = prevalence_effects,
-                                          variable = "sub_group",
-                                          type = "pointestimate",
-                                          moderator = "spike_binary",
-                                          modval = 0)
-
-# Bind
-effects_int_tibble <- bind_rows(effects_int_1,
-                                effects_int_0) %>%
-  left_join(topic_labels_tibble) %>%
-  select(sub_group = value, prop = proportion, topic_name, moderator)
-
-# Pivot wide to calculate difference
-effects_int_tibble <- effects_int_tibble %>%
-  mutate(moderator = paste0("binary_", moderator)) %>%
-  pivot_wider(names_from = moderator, values_from = prop) %>%
-  mutate(difference = binary_1 - binary_0)
-
-# Plot
-effects_int_tibble %>%
-  ggplot(.,
-         aes(x = difference,
-             y = sub_group)) +
-  geom_col(aes(fill = sub_group)) +
-  facet_wrap(~topic_name) +
-  scale_fill_manual(name = "", values = colours_groups) +
-  labs(title = "Difference in effect of spike_binary = 1",
-       x = NULL,
-       caption = "Source: William Rohde Madsen.") +
-  theme_speciale
-
-save_plot_speciale("output-figures/diff_in_effect_spike_binary.png")
-
-### Plot interaction effect between specific spike period and sub_group ----
-calculate_diff_in_spike_period <- function(spike_period = 1){
-  
-  effects_int_1 <- stminsights::get_effects(estimates = prevalence_effects,
-                                            variable = "sub_group",
-                                            type = "pointestimate",
-                                            moderator = "spike_period",
-                                            modval = 0)
-  
-  effects_int_0 <- stminsights::get_effects(estimates = prevalence_effects,
-                                            variable = "sub_group",
-                                            type = "pointestimate",
-                                            moderator = "spike_period",
-                                            modval = 1)
-  
-  # Bind
-  effects_int_tibble <- bind_rows(effects_int_1,
-                                  effects_int_0) %>%
-    left_join(topic_labels_tibble) %>%
-    select(sub_group = value, prop = proportion, topic_name, moderator)
-  
-}
-
-# Pivot wide to calculate difference
-effects_int_tibble <- effects_int_tibble %>%
-  mutate(moderator = paste0("binary_", moderator)) %>%
-  pivot_wider(names_from = moderator, values_from = prop) %>%
-  mutate(difference = binary_1 - binary_0)
-
-# Plot
-effects_int_tibble %>%
-  ggplot(.,
-         aes(x = difference,
-             y = sub_group)) +
-  geom_col(aes(fill = sub_group)) +
-  facet_wrap(~topic_name) +
-  scale_fill_manual(name = "", values = colours_groups) +
-  labs(title = "Difference in effect of spike period",
-       x = NULL,
-       caption = "Source: William Rohde Madsen.") +
-  theme_speciale
-
-save_plot_speciale("output-figures/diff_in_effect_spike_binary.png")
-
 
 
 ### Calculate probability of each word by topic ----
