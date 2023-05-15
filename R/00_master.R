@@ -23,7 +23,7 @@ source("R/01_load_raw_data.R", verbose = TRUE)
 # 
 # source("R/05_create_dfm_tokens.R")
 # 
-# save(master_dt, master_dfm, master_tokens, master_tokens_tbl, feel,
+# save(master_dt, master_dfm, master_tokens, master_tokens_tbl, afinn, popular_tokens,
 #      file = "data-formatted/formatted_data.RData")
 
 # Calculations and analysis ----
