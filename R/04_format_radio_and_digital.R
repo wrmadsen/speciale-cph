@@ -132,11 +132,7 @@ radio_raw_binded <- bind_rows(
            dateog2 = date,
            date = gsub(" ..\\:..$", "", date),
            date = str_replace_all(date, fr_to_en_months),
-           date = as.Date(date, "%d %B %Y"),
-           # Remove title topics
-           title = gsub(".+:|Radio Ndeke Luka", "", title),
-           # Remove var player = new MediaElementPlayer('#player-16138');
-           body = gsub("var player = new MediaElementPlayer.+\\);|Radio Ndeke Luka", "", body)),
+           date = as.Date(date, "%d %B %Y")),
   # Radio Lengo Songo
   radio_raw %>%
     filter(sub_group == "Radio Lengo Songo") %>%
@@ -144,10 +140,7 @@ radio_raw_binded <- bind_rows(
            dateog2 = date,
            date = gsub(" ..\\:..$", "", date),
            date = str_replace_all(date, fr_to_en_months),
-           date = as.Date(date, "%B %d, %Y"),
-           # Remove author of post
-           body = gsub(authors_to_remove_from_lengo_songo, "", body),
-           body = gsub("Lengo Songo|Radio", "", body)),
+           date = as.Date(date, "%B %d, %Y")),
   # Radio RJDH, Reseau des journalistes
   radio_raw %>%
     filter(sub_group == "RJDH") %>%
@@ -156,19 +149,12 @@ radio_raw_binded <- bind_rows(
            date = gsub(" ..\\:..$", "", date),
            date = str_replace_all(date, fr_to_en_months),
            date = as.Date(date, "%B %d, %Y"),
-           # Remove title topics
-           title = gsub(".+:", "", title),
-           # Remove patterns from body
-           body = gsub("RJDH|(émission Actualité et Nous)|SangoFrançais", "", body),
-           # Remove authors of articles
-           body = gsub(authors_to_remove_from_rjdh, "", body),
     )
-  
 )
 
 
 ## Then transmute columns ----
-radio <- radio_raw_binded %>%
+master_radio <- radio_raw_binded %>%
   arrange(sub_group, date) %>%
   transmute(sub_group,
             group = "Radio",
@@ -177,32 +163,16 @@ radio <- radio_raw_binded %>%
             month = floor_date(date, unit = "month"),
             year = year(date),
             text = paste0(title, " ", body),
-            text_nchar = nchar(text),
             url
   ) %>%
   arrange(date) %>%
   # Remove duplicates based on URL
   distinct(url, .keep_all = TRUE)
 
-# Test before tidying above
-# Authors (at the end of string Lengo)
-radio %>%
-  #filter(sub_group == "Radio Lengo Songo") %>%
-  select(url, text_nchar, text) %>%
-  filter(text_nchar > 100) %>%
-  arrange(text_nchar) %>%
-# transmute(text = substr(text, nchar(text)-50, nchar(text))) %>%
-  slice_sample(n = 50) %>%
-  arrange(text_nchar) #%>% view
-#   print(n = 300)
-
 # Rename
-master_radio <- radio
-
 head(master_radio)
 
 summary(master_radio$date)
-
 
 # Tidy digital media -----
 ## Correct digital media dates -----
@@ -214,16 +184,11 @@ digital_raw_binded <- bind_rows(
            dateog2 = date,
            date = str_extract(date, "\\d+\\s\\D+\\s\\d+"),
            date = str_replace_all(date, fr_to_en_months),
-           date = as.Date(date, "%d %B %Y"),
-           # Remove city and date of post and media name, website, "Source"
-           # Topics in title (Afrique, RCA, etc.)
-           title = gsub("RCA:|RCA :|Afrique:|.+:", "", title),
-           body = gsub("Bangui.+\\(Ndjoni Sango\\)|Ndjoni-Sango.+\\:|Ndjoni Sango|Ndjoni-Sango|ndjonisango|Source|Fait à Bangui", "", body)
-    )
+           date = as.Date(date, "%d %B %Y"))
 )
 
 ## Then transmute columns ----
-digital <- digital_raw_binded %>%
+master_digital <- digital_raw_binded %>%
   arrange(sub_group, date) %>%
   transmute(sub_group,
             group = "Digital",
@@ -233,23 +198,119 @@ digital <- digital_raw_binded %>%
             year = year(date),
             text = paste0(title, " ", body),
             text = gsub("NA", "", text),
-            text_nchar = nchar(text),
             url
   ) %>%
   arrange(date) %>%
   # Remove duplicates based on URL
   distinct(url, .keep_all = TRUE)
 
-# Test before tidying above
-digital %>%
-  #transmute(body = substr(body, nchar(body)-50, nchar(body))) %>%
-  select(text_nchar, text) %>%
-  filter(text_nchar < 1100 & text_nchar > 900) %>%
-  slice_sample(n = 300) #%>% view()
 
-master_digital <- digital
+# Combine radio and digital ----
+## Bind digital and radio ----
+# And add political orientation variable
+russian_outlets <- c("Radio Lengo Songo", "Ndjoni Sango")
 
-# Number of rows in total -----
-nrow(master_radio) + nrow(master_digital)
+master_text <- bind_rows(master_radio, master_digital) %>%
+  arrange(group, date) %>%
+  mutate(orient = if_else(sub_group %in% russian_outlets, "Pro-Russia", "Other")) %>%
+  select(orient, everything())
+
+## Turn lower case ----
+master_text <- master_text %>%
+  mutate(text = tolower(text))
+
+## Remove various strings from text ----
+# French months, ndjoni sango, etc.
+master_text <- master_text %>%
+  # Various, general removal
+  mutate(text = gsub("sangofrançais|doctarngaba|\\.com|radio|sango|rkatsuva|internews|émission|www|actualité et nous|actualité|rédaction|ndjoni.net|ndjoni|lire la suite|ndeke luka|\\.car@",
+                     "",
+                     text)) %>%
+  # Ndjoni Sango
+  # Remove city and date of post and media name, website, "Source"
+  # Topics in title (Afrique, RCA, etc.)
+  mutate(text = gsub("rca:|rca :|afrique:|.+:|bangui.+\\(ndjoni sango\\)|ndjoni-sango.+\\:|ndjoni sango|ndjoni-sango|ndjonisango|source|fait à bangui|ndjonisnago",
+                     "",
+                     text)) %>%
+  # RJDH
+  # Remove title topics
+  # Remove patterns from body
+  # Remove authors of articles
+  mutate(text = gsub(".+:|rjdh|(émission actualité et nous)|sangofrançais" %>%
+                       paste0(., authors_to_remove_from_rjdh, collapse = "|"),
+                     "",
+                     text)) %>%
+  # Lengo Songo
+  # Remove author of post
+  mutate(text = gsub("lengo songo|radio" %>%
+                       paste0(., authors_to_remove_from_lengo_songo, collapse = "|"),
+                     "",
+                     text)) %>%
+  # Ndeke Luka
+  # Remove title topics
+  # Remove var player = new MediaElementPlayer('#player-16138');
+  mutate(text = gsub(".+:|radio ndeke luka|var player = new mediaelementplayer.+\\);|radio ndeke luka",
+                     "",
+                     text))
+
+## Verify sample ----
+# Number of rows
+nrow(master_text)
+
+# Slice and view
+master_text %>%
+  filter(sub_group == "Ndjoni Sango") %>%
+  #filter(sub_group == "Radio Ndeke Luka") %>%
+  select(sub_group, text, url) %>%
+  slice_sample(n = 500) %>%
+  arrange(nchar(text)) #%>% view()
+
+# transmute(text = substr(text, nchar(text)-50, nchar(text))) %>%
+# slice_sample(n = 50) %>%
+# arrange(text_nchar) #%>% view
+#  print(n = 300)
+
+## Remove months ----
+# Format months before removal
+months_to_remove <- fr_to_en_months %>%
+  names() %>%
+  paste0(., collapse = "|")
+
+months_to_remove <- months_to_remove %>%
+  remove_accents() %>%
+  paste0(., months_to_remove, collapse = "|")
+
+# Remove months
+master_text <- master_text %>%
+  mutate(text = gsub(months_to_remove,
+                     "",
+                     text))
+
+## Calculate n_char ----
+master_text <- master_text %>%
+  mutate(text_nchar = nchar(text))
+
+## Verify sample again ----
+master_text %>%
+  filter(text_nchar < 500) %>%
+  #filter(sub_group == "Ndjoni Sango") %>%
+  #filter(sub_group == "Radio Ndeke Luka") %>%
+  select(sub_group, text, text_nchar, url) %>%
+  slice_sample(n = 500) %>%
+  arrange(text_nchar) #%>% view()
+
+## Drop with less than 200 characters ----
+(before <- nrow(master_text)) # before
+
+master_text <- master_text %>%
+  filter(text_nchar >= 100)
+
+(after <- nrow(master_text)) # after
+
+before - after
+
+(before - after)/before
+
+
 
 
