@@ -151,35 +151,17 @@ convert_dfm_to_tibble <- function(dfm, dt){
   
 }
 
-# Format before running functions ----
-## Bind digital and radio ----
-# And add political orientation variable
-russian_outlets <- c("Radio Lengo Songo", "Ndjoni Sango")
-
-master_text <- bind_rows(master_radio, master_digital) %>%
-  arrange(group, date) %>%
-  mutate(orient = if_else(sub_group %in% russian_outlets, "Pro-Russia", "Other")) %>%
-  select(orient, everything())
-
-# Join spikes periods
-# master_text <- master_text %>%
-#   left_join(spike_periods_to_join) %>%
-#   mutate(spike_no = if_else(is.na(spike_no), 0, spike_no), 
-#          spike_binary = if_else(spike_no > 0, 1, 0) %>% as.factor)
-
-# Drop with less than 200 characters
-master_text <- master_text %>%
-  filter(text_nchar >= 200)
-
 # Run functions ----
 ## Tidy text ----
+# Text has been turned to lower case in the 04 script
 master_text_tidied <- master_text %>%
   mutate(text = gsub("'|'|’|’|-", " ", text),
          text = remove_patterns_in_post(text),
          text = str_squish(text),
          text = remove_accents(text),
-         text = tolower(text),
          text = find_and_remove_repeated_substring(text))
+
+nrow(master_text_tidied)
 
 # Replace certain number-strings
 # If these were not taken care of,
@@ -217,6 +199,9 @@ master_tokens_stemmed <- master_tokens_stemmed %>%
 master_dfm <- master_tokens_stemmed %>%
   create_dfm()
 
+## Check summary so far ----
+master_dfm
+
 ## Trim dfm ----
 # Minimum
 master_dfm <- master_dfm %>%
@@ -227,6 +212,9 @@ master_dfm <- master_dfm %>%
 # Must have at least two character (e.g. "or")
 master_dfm <- master_dfm %>%
   dfm_select(., min_nchar = 2)
+
+# Summary
+master_dfm
 
 # Maximum
 master_dfm <- master_dfm %>%
@@ -301,9 +289,6 @@ master_tokens_tbl %>%
 
 # Check that ngrams have been recoded correctly
 topfeatures(master_dfm, 10)
-
-types(master_tokens_stemmed) %>% length()
-
 
 
 
