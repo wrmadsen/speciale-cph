@@ -60,9 +60,10 @@ master_sentiment_joined <- left_join(thetas_that_will_be_joined,
 #   select(-c(text_nchar, url, spike_no, spike_text, spike_binary))
 
 # Subset topics
-# top_topics_no is created in the 13th script
+# top_topics_no is created in the 14th script
+# topic_to_filter is created in the 14th script
 master_sentiment_joined <- master_sentiment_joined %>%
-  filter(topic_no %in% top_topics_no)
+  filter(topic_name %in% topic_to_filter)
 
 # Calculate sentiment ----
 
@@ -86,83 +87,12 @@ summary(master_sentiment_raw$topic_proportion)
 
 master_sentiment_raw_sub <- master_sentiment_raw %>%
   # Choose only very majority topics
-  filter(topic_proportion > 0.01) #%>%
+  #filter(topic_proportion > 0.01) #%>%
   # Or, for each document, choose largest topic by share
-  # group_by(document) %>%
-  # filter(topic_proportion == max(topic_proportion))
+  group_by(document) %>%
+  slice_max(order_by = topic_proportion, n = 1)
 
 ## Calculate relative sentiment -----
-
-
-# Plot sentiment by topic and media -----
-
-## Raw sentiment-per-sentiment  plot ----
-master_sentiment_raw_sub %>%
-  ggplot(.,
-         aes(x = date,
-             y = afinn_document,
-             colour = sub_group,
-             linetype = sub_group)) +
-  #geom_point(alpha = 0.1) +
-  #geom_line() +
-  #geom_smooth(se = FALSE, linewidth = 1.5) +
-  geom_smooth(aes(weight = topic_proportion), se = FALSE, linewidth = 1.2) +
-  geom_hline(yintercept = 0) +
-  facet_wrap(~topic_name,
-             scales = "free"
-             ) +
-  scale_colour_manual(name = "", values = colours_groups[1:4]) +
-  scale_linetype_manual(name = "", values = lines_group) +
-  #scale_y_continuous(trans = "log") +
-  scale_x_date(labels = dateformat(), date_breaks = "12 months") +
-  labs(title = "Sentiment per topic per media",
-       x = NULL,
-       y = "Sentiment score",
-       caption = "Source: William Rohde Madsen.") +
-  theme_speciale
-
-
-
-
-
-# Correlation between media and sentiment -----
-
-# Linear model? Simple? See UCL slides
-
-lm(score_document ~ month + sub_group*topic, data = master_sentiment_raw) %>% summary()
-
-
-
-# Correlation sentiment and topic share -----
-
-## Plot ----
-master_sentiment_raw %>%
-  filter() %>%
-  ggplot(.,
-         aes(x = topic_proportion,
-             y = afinn_document,
-             group = sub_group)) +
-  geom_point(fill = "grey99", shape = 21, alpha = 0.05) +
-  geom_smooth(aes(colour = sub_group, linetype = sub_group),
-              se = FALSE,
-              method = "lm") +
-  facet_wrap(~topic_name, scales = "free") +
-  scale_colour_manual(name = "", values = colours_groups) +
-  scale_linetype_manual(name = "", values = lines_group) +
-  labs(title = "Correlation between topic proportion and sentiment score",
-          x = "Topic proportion, %",
-          y = "Sentiment score, AFINN",
-          caption = "Source: William Rohde Madsen.") +
-  theme_speciale
-
-
-## Model ----
-
-lm(score_document ~ topic_share + year + sub_group*topic, data = master_sentiment_raw) %>% summary()
-
-
-
-
 
 
 
