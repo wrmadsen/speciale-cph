@@ -90,13 +90,15 @@ dateformat <- function(){
 # General
 orange_speciale <- "#FF9233"
 brown_speciale <- "#79481f"
-greend_speciale <- "#898a74"
+greend_speciale <- "#013220"
 greenm_speciale <- "#467548"
-greenl_speciale <- "#1b990f"
+greenl_speciale <- "#90ee90"
 purple_speciale <- "#522175"
 blued_speciale <- "#2e00c4"
 bluel_speciale <- "#2A6DBE"
 red_speciale <- "#B42418"
+redd_speciale <- "#8B0000"
+redl_speciale <- "#FFCCCB"
 pink_speciale <- "#FFBFBE"
 grey_speciale <- "#DFE0DF"
 black_speciale <- "#1F1926"
@@ -105,10 +107,10 @@ gold_speciale <- "#D4AF37"
 crimson_red <- "#DC143C"
 
 # Groups-specific
-colours_groups <- c("Ndjoni Sango" = crimson_red,
-                    "Radio Lengo Songo" = red_speciale,
-                    "Radio Ndeke Luka" = greenl_speciale,
-                    "RJDH" = greenm_speciale,
+colours_groups <- c("Ndjoni Sango" = redl_speciale,
+                    "Radio Lengo Songo" = redd_speciale,
+                    "Radio Ndeke Luka" = greend_speciale,
+                    "RJDH" = greenl_speciale,
                     "Non-Russian total" = greenm_speciale,
                     "Non-Russian average" = greenm_speciale,
                     "Pro-Russian total" = red_speciale,
@@ -122,8 +124,8 @@ bw_colours_groups <- c("Ndjoni Sango" = "black",
 
 # http://sape.inf.usi.ch/quick-reference/ggplot2/linetype
 lines_group <- c("Ndjoni Sango" = "solid",
-                 "Radio Lengo Songo" = "dashed",
-                 "Radio Ndeke Luka" = "solid",
+                 "Radio Lengo Songo" = "solid",
+                 "Radio Ndeke Luka" = "dashed",
                  "RJDH" = "dashed")
 
 # http://sape.inf.usi.ch/quick-reference/ggplot2/shape
@@ -162,7 +164,8 @@ theme_speciale <- theme(axis.text = element_text(size = unit(text_size, "mm"),
         legend.key = element_blank(),
         legend.key.size =  unit(0.5, "in")) +
   theme(strip.text = element_text(family = theme_font, size = unit(text_size, "mm")),
-        strip.background = element_rect(fill = "white"))
+        strip.background = element_rect(fill = "white")) +
+  theme(legend.key.size =  unit(0.7, "in"))
 
 
 
