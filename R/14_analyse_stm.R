@@ -1,9 +1,9 @@
 # Load STM data ----
-values_of_k <- c(20, 30, 40, 50, 60, 70, 80, 100)
+values_of_k <- c(10, 15, 20, 25, 30, 35, 40, 45)
 
-#load("data-formatted/many_models.Rdata")
+load("data-formatted/many_models.Rdata")
 
-# K-results ----
+# Optimal K ----
 ## Calculate ----
 results_of_k <- data.frame(K = values_of_k) %>%
   mutate(topic_model = many_models)
@@ -21,34 +21,47 @@ results_of_k <- results_of_k %>%
          iterations = map_dbl(topic_model, function(x) length(x$convergence$bound))) %>%
   select(-topic_model)
 
-#save(results_of_k, file = "output/results_of_k.Rdata")
-load("output/results_of_k.Rdata")
+#save(results_of_k, file = "data-formatted/results_of_k.Rdata")
+load("data-formatted/results_of_k.Rdata")
 
 # Calculate mean
 results_of_k_sub <- results_of_k %>%
   tibble() %>%
   transmute(K,
-            residuals = map_dbl(residual, "dispersion"),
+            #residuals = map_dbl(residual, "dispersion"),
             exclusivity = map_dbl(exclusivity, mean),
-            eval_heldout = map_dbl(eval_heldout, "expected.heldout"),
+            #eval_heldout = map_dbl(eval_heldout, "expected.heldout"),
             semantic_coherence = map_dbl(semantic_coherence, mean))
 
 results_of_k_sub
 
-## Plot ----
-# Four facets
+## Numbers 20 and 30 ----
 results_of_k_sub %>%
-  rename(Residuals = residuals,
-         `Held-out likelihood` = eval_heldout,
-         `Semantic coherence` = semantic_coherence,
-         Exclusivity = exclusivity) %>%
+  filter(K %in% c(20, 30)) %>%
+  pivot_longer(cols = c(2,3)) %>%
+  mutate(value = abs(value)) %>%
+  pivot_wider(names_from = K, values_from = value) %>%
+  clean_names() %>%
+  mutate(x20_to_x30 = ((x30 - x20)/x30)*100,
+         x30_to_x20 = ((x20 - x30)/x20)*100
+  )
+
+## Plot ----
+# Facets
+results_of_k_sub %>%
+  transmute(K,
+            #Residuals = residuals,
+            #`Held-out likelihood` = eval_heldout,
+            `Semantic coherence` = semantic_coherence,
+            Exclusivity = exclusivity) %>%
   pivot_longer(names_to = "Metric", values_to = "Value", -K) %>%
   ggplot(aes(x = K,
              y = Value,
              group = Metric)) +
   geom_line(aes(colour = Metric),
             linewidth = 1.5, alpha = 0.7, show.legend = FALSE) +
-  geom_vline(xintercept = 30, linewidth = 2) +
+  geom_vline(xintercept = 20, linewidth = 1.5) +
+  geom_vline(xintercept = 30, linewidth = 1.5) +
   facet_wrap(~Metric, scales = "free_y") +
   labs(x = "K (the number of topics)",
        y = NULL,
@@ -59,94 +72,105 @@ save_plot_speciale("output-figures/exclusivity_semantic_coherence.png")
 
 # Load master_stm ----
 # Save and load
-#(master_stm <- many_models[[2]])
+#(master_stm <- many_models[[3]])
 
-#save(master_stm, file = "output/master_stm.Rdata")
-load("output/master_stm.Rdata")
+#save(master_stm, file = "data-formatted/master_stm.Rdata")
+load("data-formatted/master_stm.Rdata")
 
 (number_of_topics <- master_stm$settings$dim$K)
 
 ## Extract labels ----
 # Extract the matrix of words with highest frex scores
-topic_labels_matrix_frex <- labelTopics(master_stm, n = 15)$frex
-topic_labels_matrix_lift <- labelTopics(master_stm, n = 15)$lift
+topic_labels_matrix_frex <- labelTopics(master_stm, n = 10)$frex
+topic_labels_matrix_lift <- labelTopics(master_stm, n = 10)$lift
 
 # Collapse the words for each topic into a single label
 topic_labels_matrix_frex_space <- apply(topic_labels_matrix_frex, 1, paste0, collapse = ", ")
 topic_labels_matrix_lift_space <- apply(topic_labels_matrix_lift, 1, paste0, collapse = ", ")
 
+# Turn to tibble
+topic_labels <- tibble(frex = topic_labels_matrix_frex_space,
+                       lift = topic_labels_matrix_lift_space) %>%
+  mutate(topic_no = paste0("x", 1:20))
+
 ## Find thoughts ----
 findThoughts(master_stm,
-             topic = 16,
+             topic = 7,
              texts = master_dfm$text,
-             n = 50)$docs %>% #view()
+             n = 1000)$docs %>%
   data.frame() %>%
   tibble() %>%
   rename(text = 1) %>%
-  mutate(text = substr(text, 1, 300)) %>% print(n = 100) #view()
+  mutate(text_nchar = nchar(text)) %>%
+  arrange(text_nchar) %>%
+  filter(grepl("armee", text)) %>%
+  filter(text_nchar < 800) %>%
+  slice_sample(n = 10) %>%
+  pull(text)
+#mutate(text = substr(text, 1, 300)) %>% print(n = 100) #view()
 
 # Create object of thetas ----
-master_stm_theta <- master_stm$theta %>%
+master_stm_theta_raw <- master_stm$theta %>%
   data.frame() %>%
   tibble() %>%
   clean_names()
 
-names(master_stm_theta) <- paste0(1:number_of_topics)
+names(master_stm_theta_raw) <- paste0(1:number_of_topics)
 
 ## Add document number as column to thetas -----
 #master_dfm %>% dfm_subset(., document == "text312") # check text400 and 1012 are empty/fully sparse
 document_no_thetas <- convert(master_dfm, to = "stm")
 document_no_thetas <- names(document_no_thetas$documents)
 
-master_stm_theta <- master_stm_theta %>%
+master_stm_theta <- master_stm_theta_raw %>%
   mutate(document = document_no_thetas) %>%
-  select(document, everything())
+  select(document, everything()) %>%
+  clean_names()
 
 ## Join theta values to master_dt ----
 # Ensure master_dt has same documents as master_stm
 # Due to the empty documents dropped during stm(), dfm2stm(x, docvars, omit_empty = TRUE)
 # Master_dt is introduced here in this script
-master_dt_thetas <- full_join(master_dt, master_stm_theta) %>%
+master_dt_thetas <- full_join(master_dt, master_stm_theta, by = "document") %>%
   tibble()
 
+## Check various documents per topic ----
+# Check difference between topics 18 and 7
+master_dt_thetas %>%
+  clean_names() %>%
+  slice_max(order_by = x13, n = 1000) %>%
+  slice_sample(n = 300) %>%
+  arrange(-x13) %>%
+  transmute(x14, x13, x15, text) #%>% view()
+
+## Pivot longer ----
 # Long version
-columns_to_pivot <- 1:30 %>% paste0()
+columns_to_pivot <- paste0("x", 1:number_of_topics)
 
 master_dt_thetas_long <- master_dt_thetas %>%
   pivot_longer(cols = all_of(columns_to_pivot), names_to = "topic_no", values_to = "topic_proportion") %>%
-  mutate(topic_no = as.integer(topic_no),
-         topic_name = case_match(topic_no,
-                                 16 ~ "Insecurity, humanitarian",
-                                 # 22 ~ "Battles, embargo",
-                                 # 20 ~ "Int. court",
-                                 # 15 ~ "Sports",
-                                 # 6 ~ "Parliament",
-                                 # 18 ~ "Infrastructure",
-                                 # 11 ~ "Salaries, strikes",
-                                 # 5 ~ "Religious",
-                                 # 25 ~ "Rep. dialogue",
-                                 # 4 ~ "Policing, rights",
-                                 # 3 ~ "Culture",
-                                 # 27 ~ "European Union, aid",
-                                 # 1 ~ "Finance, budget",
-                                 # 10 ~ "France, USA",
-                                 # 21 ~ "Sanctions",
-                                 # 2 ~ "Int. court, Hassan",
-                                 # 23 ~ "NA", # NOT SURE
-                                 # 8 ~ "Agri.",
-                                 # 9 ~ "Families",
-                                 # 24 ~ "Bangassou", # NOT SURE
-                                 # 13 ~ "Sanitary",
-                                 # 17 ~ "UN",
-                                 # 30 ~ "Gas prices",
-                                 # 26 ~ "Schooling",
-                                 # 7 ~ "Vehicles",
-                                 # 28 ~ "Elections",
-                                 # 19 ~ "Opp., const. reform",
-                                 # 29 ~ "Rebels",
-                                 # 14 ~ "Russian in.",
-                                 # 12 ~ "Living cond.",
-                                 99 ~ "At least one condition must be supplied",
+  mutate(topic_name = case_match(topic_no,
+                                 # "x1" ~ "ID card, Al Madina",
+                                 # "x2" ~ "Inflation",
+                                 # "x3" ~ "Religion",
+                                 # "x4" ~ "Culture",
+                                 # "x5" ~ "Enemy, Macron, Bozize",
+                                 # "x6" ~ "NA1",
+                                 # "x7" ~ "NA2",
+                                 # "x8" ~ "Rep. dialogue, Khartoum",
+                                 # "x9" ~ "Parliament",
+                                 # "x10" ~ "Douane, trade unions, tax",
+                                 # "x11" ~ "Police",
+                                 # "x12" ~ "Foreign relations",
+                                 # "x13" ~ "EU, WBG",
+                                 # "x14" ~ "Election scrutiny, const. court",
+                                 # "x15" ~ "Humanitarian",
+                                 # "x16" ~ "Justice",
+                                 # "x17" ~ "Covid-19",
+                                 # "x18" ~ "NA3",
+                                 # "x19" ~ "Schools",
+                                 # "x20" ~ "Sport",
+                                 "x99" ~ "At least one condition must be supplied",
                                  .default = as.character(topic_no)))
 
 # Save those that have been named to vector for later viz
@@ -155,35 +179,32 @@ top_topics_no <- master_dt_thetas_long %>%
   filter(as.character(topic_no) != topic_name) %>%
   pull(topic_no)
 
-#save(master_dt_thetas_long, file = "output/master_dt_thetas_long.Rdata")
-#load("output/master_dt_thetas_long.Rdata")
+#save(master_dt_thetas_long, file = "data-formatted/master_dt_thetas_long.Rdata")
+#load("data-formatted/master_dt_thetas_long.Rdata")
 
 # Table of topics and total proportion ----
-topic_labels_matrix_frex_space
-
 master_dt_thetas_long %>%
-  group_by(topic_name) %>%
+  group_by(topic_name, topic_no) %>%
   summarise(topic_proportion = mean(topic_proportion, na.rm = TRUE)) %>%
   ungroup() %>%
-  mutate(topic_labels_matrix_frex_space,
-         topic_labels_matrix_lift_space) %>%
+  left_join(., topic_labels, by = "topic_no") %>%
   arrange(-topic_proportion) %>%
   transmute(Topic = topic_name,
             topic_proportion = topic_proportion*100,
             topic_proportion = round(topic_proportion, 2),
-            topic_labels_matrix_frex_space,
-            topic_labels_matrix_lift_space) %>%
+            frex,
+            lift) %>%
   # To flextable
   flextable() %>%
-  width(., width = 1.1) %>%
-  width(., j = "topic_labels_matrix_frex_space", width = 4.8) %>%
-  width(., j = "topic_labels_matrix_lift_space", width = 4.8) %>%
+  width(., width = 0.1) %>%
+  width(., j = "frex", width = 4.8) %>%
+  width(., j = "lift", width = 4.8) %>%
   #border_inner_h(.) %>%
   set_header_labels(.,
                     topic = "Topic",
                     topic_proportion = "Proportion (%)",
-                    topic_labels_matrix_frex_space = "Common words (FREX)",
-                    topic_labels_matrix_lift_space = "Common words (Lift)") #%>%
+                    frex = "Common words (FREX)",
+                    lift = "Common words (Lift)") #%>%
 #save_as_docx(path = "output-tables/master_dt_thetas_long.docx")
 
 # Topic proportion total by group ----
@@ -202,7 +223,7 @@ data_for_plot %>%
   #mutate(name = gsub("(.{23})\\_(.*)", "\\1\n\\2", name)) %>%
   #filter(!sub_group %in% c("Non-Russian total", "Pro-Russian total")) %>%
   group_by(sub_group) %>%
-  slice_max(n = 13, order_by = mean_per_group) %>%
+  slice_max(n = 10, order_by = mean_per_group) %>%
   ungroup %>%
   mutate(sub_group = as.factor(sub_group),
          topic_colour = as.factor(topic_name),
@@ -221,7 +242,7 @@ data_for_plot %>%
 
 # Plot with points
 data_for_plot %>%
-  mutate(half = if_else(mean_overall > 3, "", " "),
+  mutate(half = if_else(mean_overall > 4.7, "", " "),
          topic_name = fct_reorder(topic_name, mean_overall)) %>%
   ggplot(.,
          aes(x = mean_per_group,
@@ -246,7 +267,7 @@ data_for_plot <- master_dt_thetas_long %>%
 
 # Plot
 (topics_to_filter <- master_dt_thetas_long %>%
-    filter(topic_no %in% c(16, 22, 20, 15, 6, 25, 2, 28, 19, 14, 29)) %>%
+    #filter(topic_no %in% c(16, 22, 20, 15, 6, 25, 2, 28, 19, 14, 29)) %>%
     distinct(topic_name) %>%
     pull(topic_name) %>%
     paste0(., collapse = "|"))
@@ -329,7 +350,9 @@ data_for_plot <- data_w_cor %>%
   group_by(sub_group, mean_overall, pair_name, x_name, y_name) %>%
   ungroup() %>%
   arrange(x_name, y_name) %>%
-  mutate(mean_overall_abs = abs(mean_overall))
+  mutate(mean_overall_abs = abs(mean_overall)) %>%
+  group_by(pair_name) %>%
+  mutate(max_cor_abs_per_pair = max(cor_abs))
 
 data_for_plot
 
@@ -344,9 +367,9 @@ data_for_plot %>%
          pair_name = reorder_within(pair_name, cor, sub_group)) %>%
   ggplot(aes(x = cor,
              y = pair_name)) +
-  geom_col(aes(fill = colour_group), show.legend = FALSE) +
+  geom_col(aes(fill = pair_name_colour), show.legend = FALSE) +
   facet_wrap(~sub_group, scales = "free_y") +
-  scale_fill_manual(name = "", values = c("1" = crimson_red, "0" = greenm_speciale)) +
+  #scale_fill_manual(name = "", values = c("1" = crimson_red, "0" = greenm_speciale)) +
   scale_y_reordered() +
   labs(title = "Correlation for 10 most frequent topics per sub group",
        x = NULL,
@@ -359,18 +382,18 @@ data_for_plot %>%
 data_for_plot %>%
   filter(!grepl("NA|Bangassou", pair_name)) %>%
   filter(grepl(topics_to_filter, pair_name)) %>%
-  #filter(mean_overall > 0) %>%
+  filter(max_cor_abs_per_pair > 0.2) %>%
   mutate(half = if_else(mean_overall > 0, "", " "),
          pair_name = fct_reorder(pair_name, mean_overall)) %>%
   ggplot(.,
          aes(x = cor,
              y = pair_name)) +
   geom_point(aes(shape = sub_group, colour = sub_group), size = 5) +
-  facet_wrap(~x_name, scales = "free") +
+  facet_wrap(~half, scales = "free") +
   scale_color_manual(name = "", values = colours_groups) +
   scale_shape_manual(name = "", values = points_group) +
-  labs(title = "Mean sentiment for topics by media",
-       x = "Mean sentiment",
+  labs(title = "Pair-wise correlation for topics per media",
+       x = "Correlation topic",
        y = NULL,
        caption = "Source: William Rohde Madsen.") +
   theme_speciale
