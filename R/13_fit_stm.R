@@ -2,7 +2,7 @@
 
 # Fit with covariates ----
 # Values of K to find optimal one
-values_of_k <- c(20, 30, 40, 50, 60, 70, 80, 100)
+values_of_k <- c(10, 15, 20, 25, 30, 35, 40, 45)
 
 # Fit models with parallel approach
 # furrr, progressr, future
@@ -35,7 +35,7 @@ many_models <- with_progress({
 })
 
 
-# Save models
+# Save models ----
 save(many_models, file = "data-formatted/many_models.Rdata")
 
 
