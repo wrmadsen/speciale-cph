@@ -43,42 +43,23 @@ sentiment_per_document <- master_sentiment %>%
 sentiment_per_document %>%
   filter(text_nchar < 400) #%>% view
 
-# Add sentiment to thetas (topics) object ----
-#load("output/master_dt_thetas_long.Rdata")
-
+# Add thetas (topics) ----
 thetas_that_will_be_joined <- master_dt_thetas_long %>%
-  select(sub_group, document, date, month, topic_no, topic_name, topic_proportion) %>%
+  select(sub_group, document, date, month, year, topic_no, topic_name, topic_proportion, text_nchar, text, url) %>%
   filter(year(date) >= 2020)
 
 master_sentiment_joined <- left_join(thetas_that_will_be_joined,
                                      sentiment_per_document %>% select(-c(text, text_nchar)),
-                                     by = "document")
-
-# # Pivot longer
-# master_sentiment_long <- master_sentiment_joined %>%
-#   pivot_longer(cols = c(15:44), names_to = "topic", values_to = "topic_share") %>%
-#   select(-c(text_nchar, url, spike_no, spike_text, spike_binary))
+                                     by = "document") %>%
+  relocate(text_nchar, text, url, .after = last_col())
 
 # Subset topics
 # top_topics_no is created in the 14th script
 # topic_to_filter is created in the 14th script
-master_sentiment_joined <- master_sentiment_joined %>%
-  filter(topic_name %in% topic_to_filter)
+# master_sentiment_joined <- master_sentiment_joined %>%
+#   filter(topic_name %in% top_topics_name)
 
 # Calculate sentiment ----
-
-## Calculate share of binary per month -----
-# master_sentiment_share <- master_sentiment_joined %>%
-#   # First choose topic per document
-#   group_by(document) %>%
-#   filter(topic_proportion == max(topic_proportion)) %>%
-#   # Calculate monthly share
-#   group_by(sub_group, month, topic_name) %>%
-#   summarise(n = n()) %>%
-#   arrange(sub_group, month, topic_name) %>%
-#   group_by(sub_group, month, topic_name) %>%
-#   mutate(total = sum(n),
-#          share = n/total)
 
 ## Calculate raw score per document ----
 master_sentiment_raw <- master_sentiment_joined
@@ -86,15 +67,20 @@ master_sentiment_raw <- master_sentiment_joined
 summary(master_sentiment_raw$topic_proportion)
 
 master_sentiment_raw_sub <- master_sentiment_raw %>%
-  # Choose only very majority topics
-  #filter(topic_proportion > 0.01) #%>%
-  # Or, for each document, choose largest topic by share
   group_by(document) %>%
-  slice_max(order_by = topic_proportion, n = 1)
+  slice_max(order_by = topic_proportion, n = 10) #%>%
+  # ungroup() %>%
+  # filter(topic_proportion > 0.174)
 
-## Calculate relative sentiment -----
+# Summary after slice_max -----
 
+# Summary
+summary(master_sentiment_raw_sub$topic_proportion)
 
+# Number of observations
+nrow(master_sentiment_raw) # pre
+nrow(master_sentiment_raw_sub) # post
+nrow(master_sentiment_raw_sub)/4/20 # per media and topic
 
 
 
