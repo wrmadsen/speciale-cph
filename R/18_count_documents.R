@@ -108,9 +108,19 @@ master_dt %>%
 save_plot_speciale("output-figures/method_articles_per_year.png", width = 30)
 
 
-## Documents per week day ----
+## In numbers ----
 
+# Per sub_group
+master_dt %>%
+  group_by(sub_group) %>%
+  summarise(n = n())
 
+# Per year
+master_dt %>%
+  group_by(sub_group, year) %>%
+  summarise(n = n()) %>%
+  ungroup() %>%
+  pivot_wider(names_from = year, values_from = n)
 
 
 

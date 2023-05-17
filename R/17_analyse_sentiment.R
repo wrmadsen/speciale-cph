@@ -1,16 +1,15 @@
-# Check some documents -----
-master_sentiment_raw_sub %>%
+# Methodology and plots -----
+
+## Check some documents -----
+sentiment_per_doc_thetas_sub %>%
   filter(sub_group == "RJDH") %>%
   filter(topic_no == "x4") %>%
   select(sub_group, topic_proportion, afinn_document, text, url) %>%
   #group_by(sub_group) %>% summarise(n = n())
   arrange(-topic_proportion) #%>% view()
 
-
-# Plot sentiment by topic -----
-
 ## Overall sentiment per media and year -----
-master_sentiment_raw_sub %>%
+sentiment_per_doc_thetas_sub %>%
   group_by(sub_group, year) %>%
   summarise(mean = mean(afinn_document, na.rm = TRUE)) %>%
   mutate(sub_group = as.factor(sub_group),
@@ -23,13 +22,62 @@ master_sentiment_raw_sub %>%
   geom_col(aes(fill = sub_group), show.legend = FALSE) +
   facet_wrap(~year) +
   scale_fill_manual(name = "", values = colours_groups) +
-  scale_x_continuous(breaks = seq(-0.4, 0.8, 0.2)) +
+  scale_x_continuous(breaks = seq(-0.5, 0.5, 0.1)) +
   labs(title = "Mean sentiment of documents per year by media outlets",
        x = "Average sentiment per document",
        y = NULL,
        caption = "Source: William Rohde Madsen.") +
   theme_speciale +
   theme(panel.grid.major.y = element_blank())
+
+
+## Biased by use of words? ----
+# Show if RJDH, for example, are biased by the way they use words
+# words that feature on AFINN with particurlary high scores
+master_tokens_sentiment %>%
+  group_by(sub_group, year) %>%
+  summarise(variance = var(afinn_median, na.rm = TRUE)) %>%
+  ggplot(.,
+         aes(x = year,
+             y = variance)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~sub_group)
+
+master_tokens_sentiment %>%
+  filter(year >= 2020) %>%
+  mutate(year = as.factor(year)) %>%
+  ggplot(.,
+         aes(x = afinn_median,
+             colour = year)) +
+  geom_density() +
+  geom_vline(xintercept = 3) +
+  geom_vline(xintercept = -3) +
+  facet_wrap(~sub_group)
+
+# Remove anything above 2 and below -2?
+
+## Based on how many tokens per document ? ----
+sentiment_per_doc_thetas %>% filter(is.na(n_tokens))
+sentiment_per_doc_thetas_sub %>% filter(is.na(n_tokens))
+
+# Summary
+sentiment_per_doc_thetas$n_of_tokens %>% summary()
+
+# Average tokens use to calculate sentiment per document
+sentiment_per_doc_thetas_sub %>%
+  group_by(sub_group, year) %>%
+  summarise(mean = mean(n_tokens)) %>%
+  ggplot(.,
+         aes(x = year,
+             y = mean)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~sub_group)
+
+
+
+# Topic plots ----
 
 ## Overall sentiment per media and topic -----
 data_for_plot <- master_sentiment_raw_sub %>%
@@ -86,7 +134,7 @@ data_for_plot <- master_sentiment_raw_sub %>%
   mutate(difference = mean_per_topic_and_year_and_group - mean_per_group_and_year)
 
 data_for_plot <- data_for_plot %>%
-    filter(topic_no %in% top_topics_no)
+  filter(topic_no %in% top_topics_no)
 
 data_for_plot %>%
   filter(year < 2023) %>%
