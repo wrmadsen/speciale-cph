@@ -71,14 +71,17 @@ feel <- feel_raw %>%
 # Format
 afinn <- afinn_raw %>%
   mutate(token = remove_accents(token),
-         token = remove_patterns_in_post(token)) %>%
+         token = remove_patterns_in_post(token),
+         token = tolower(token),
+         token = gsub("l'", "", token)) %>%
   filter(!grepl("\\s", token)) %>%
   # Stem words
   mutate(token = char_wordstem(token, language = "fr"),
          token = stri_trans_general(str = token, id = "Latin-ASCII")) %>%
-  # Calculate median
+  # Calculate
   group_by(token) %>%
-  summarise(afinn = median(afinn))
+  summarise(afinn_median = median(afinn),
+            afinn_mean = mean(afinn))
 
 # Check if AFINN has multiple scores per its stemmed token
 # This is solved by taking its median (above)
