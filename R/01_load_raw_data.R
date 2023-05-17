@@ -36,31 +36,10 @@ read_bind_digital <- function(files){
 digital_raw <- list.files(pattern = "digital_articles.+\\.csv", recursive = TRUE) %>%
   map_df(read_bind_digital)
 
-# Spike periods data ----
-#spike_periods <- read_csv("output/spike_periods.csv")
-
-# Twitter data ----
-# By keywords
-# read_bind_twitter <- function(files){
-#   
-#   id <- gsub("data\\-raw\\/Twitter\\/twitter_keyword\\_|\\.csv|_.+", "", files)
-#   
-#   read_csv(files) %>%
-#     clean_names() %>%
-#     mutate(id = id)
-#   
-# }
-# 
-# twitter_keywords_raw <- list.files(pattern = "twitter_keyword_.+\\.csv", recursive = TRUE) %>%
-#   map_df(read_bind_twitter)
-
-# By user
-
 # GADM data ----
 # https://gadm.org/download_country.html
 gadm_raw <- list.files(pattern = "1.shp", recursive = TRUE) %>%
   map_df(~read_sf(.))
-
 
 # FEEL sentiment dictionary ----
 # Amine Abdaoui, Jérôme Azé, Sandra Bringay et Pascal Poncelet
