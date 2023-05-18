@@ -6,7 +6,7 @@ source("R/01_packages.R")
 source("R/01_utils.R")
 
 # Load and scrape data ----
-source("R/01_load_raw_data.R", verbose = TRUE)
+#source("R/01_load_raw_data.R", verbose = TRUE)
 
 # source("R/02_scrape_radio_ndeke.R")
 # 
@@ -29,7 +29,20 @@ source("R/01_load_raw_data.R", verbose = TRUE)
 # Calculations and analysis ----
 load("data-formatted/formatted_data.RData")
 
-# Plot ----
+#source("R/13_fit_stm.R")
+
+#source("R/14_optimal_k.R")
+
+source("R/15_analyse_stm.R")
+
+source("R/16_calculate_sentiment.R")
+
+source("R/17_analyse_sentiment.R")
+
+
+
+
+
 
 
 
