@@ -132,7 +132,7 @@ top_topics_no <- c("x16", "x5", "x19",
 # Save as Excel
 table_of_topics %>%
   rename("Topic" = topic_name, `Prop. (%)` = prop, "FREX" = frex) %>%
-  write.xlsx(., file = "output-tables/analysis_table_of_topics.xlsx")
+  write.xlsx(., file = "output-tables/analysis_stm_table_of_topics.xlsx")
 
 # Save flextable
 table_of_topics %>%
@@ -146,7 +146,7 @@ table_of_topics %>%
                     topic_name = "Topic",
                     prop = "Prop. (%)",
                     frex = "FREX") %>%
-  save_as_docx(path = "output-tables/analysis_table_of_topics.docx")
+  save_as_docx(path = "output-tables/analysis_stm_table_of_topics.docx")
 
 # Topic proportion total by group ----
 # Calculate 
@@ -175,7 +175,7 @@ data_for_plot %>%
   theme_speciale +
   guides(colour = guide_legend(nrow = 2))
 
-save_plot_speciale("output-figures/analysis_topic_prop_mean_by_group.png",
+save_plot_speciale("output-figures/analysis_stm_prop_mean_by_group.png",
                    height = 23, width = 30)
 
 # Check numbers
@@ -231,83 +231,85 @@ data_for_plot %>%
   theme_speciale +
   theme(panel.grid.major.x = element_blank())
 
-save_plot_speciale("output-figures/analysis_topic_prop_mean_over_time.png", height = 23, width = 31)
+save_plot_speciale("output-figures/analysis_stm_prop_mean_over_time.png", height = 23, width = 31)
 
 
 # Topic correlations ----
 ## Format and join ----
+# Create object with all possible pairs but without values
 data_w_cor <- master_dt_thetas_long %>%
-  select(sub_group, month, document, y_name = topic_name, y_value = topic_proportion)
+  select(sub_group, month, document, url, name = topic_name, value = topic_proportion)
 
-data_w_cor <- full_join(data_w_cor %>% select(-month),
-                        data_w_cor %>% rename(x_name = y_name, x_value = y_value),
-                        by = c("sub_group", "document")) %>%
+pairs_without <- full_join(data_w_cor %>% rename(x_name = name) %>% select(-value),
+                           data_w_cor %>% rename(y_name = name) %>% select(-value),
+                           by = c("sub_group", "document", "month")) %>%
   filter(y_name != x_name)
 
-data_w_cor
+pairs_without <- pairs_without %>%
+  distinct(x_name, y_name)
+
+# Remove duplicates
+pairs_without <- data.frame(t(apply(pairs_without, 1, sort)))
+
+pairs_without <- unique(pairs_without) %>%
+  tibble() %>%
+  rename(x_name = X1, y_name = X2)
+
+pairs_without
+
+# Add x and y values
+pairs_w_values <- full_join(data_w_cor %>% rename(x_value = value),
+                            pairs_without, by = c("name" = "x_name")) %>%
+  rename(x_name = name)
+
+nrow(pairs_w_values)
+
+pairs_w_values <- full_join(data_w_cor %>% rename(y_value = value),
+                            pairs_w_values, by = c("name" = "y_name",
+                                                   "sub_group", "month",
+                                                   "document", "url")) %>%
+  rename(y_name = name)
+
+pairs_w_values %>% distinct(x_name, y_name)
+
+# Remove NAs
+pairs_w_values <- pairs_w_values %>%
+  filter(!is.na(x_name) & !is.na(y_name))
+
+nrow(pairs_w_values)
+
+# Verify count, should be 190
+pairs_w_values %>% distinct(x_name, y_name)
 
 # Subset top topics
-data_w_cor <- data_w_cor %>%
-  filter(x_name %in% top_topics_name | y_name %in% top_topics_name)
+pairs_w_values <- pairs_w_values %>%
+  filter(x_name %in% top_topics_name | y_name %in% top_topics_name) %>%
+  mutate(pair_name = paste0(x_name, " | ", y_name)) %>%
+  arrange(x_name, y_name)
+
+pairs_w_values
 
 ## Calculate correlations ----
 # Lifetime
-data_w_cor_lifetime <- data_w_cor %>%
-  select(sub_group, x_name, y_name, x_value, y_value) %>%
-  group_by(sub_group, x_name, y_name) %>%
+cor_lifetime <- pairs_w_values %>%
+  group_by(sub_group, pair_name) %>%
   summarise(cor = cor(x_value, y_value)) %>%
   ungroup() %>%
   mutate(cor_abs = abs(cor))
 
-# Per month
-data_w_cor_month <- data_w_cor %>%
-  select(sub_group, month, x_name, y_name, x_value, y_value) %>%
-  group_by(sub_group, month, x_name, y_name) %>%
+# Over time
+cor_time <- pairs_w_values %>%
+  mutate(time = floor_date(month, "year")) %>%
+  #mutate(time = month) %>%
+  group_by(sub_group, time, pair_name) %>%
   summarise(cor = cor(x_value, y_value)) %>%
   ungroup() %>%
   mutate(cor_abs = abs(cor))
 
-
-# Remove duplicates based sub_group and x and y names
-remove_duplicates_based_on_alpha_order <- function(input){
-  
-  input %>%
-    dplyr::mutate(normalized = purrr::map2_chr(x_name, y_name, ~paste(sort(c(.x, .y)), collapse = ""))) %>%
-    dplyr::group_by(normalized) %>%
-    dplyr::summarise(x_name = dplyr::first(x_name),
-                     y_name = dplyr::first(y_name)) %>%
-    dplyr::select(-normalized)
-  
-}
-
-# Data.table, faster?
-# https://stackoverflow.com/questions/12478943/how-to-group-data-table-by-multiple-columns
-
-# Lifetime
-data_w_cor_lifetime <- data_w_cor_lifetime %>%
-  group_by(sub_group, cor) %>%
-  group_modify(~remove_duplicates_based_on_alpha_order(.)) %>%
-  ungroup()
-
-dt[dt[, .I[1], by = list(pmin(a, b), pmax(a, b))]$V1]
-
-# Month
-data_w_cor_month <- data_w_cor_month %>%
-  group_by(sub_group, month, cor) %>%
-  group_modify(~remove_duplicates_based_on_alpha_order(.)) %>%
-  ungroup()
-
-## Plot lifetime ----
-# Verify count, 29?
-data_w_cor_lifetime %>%
-  group_by(sub_group, y_name) %>%
-  summarise(n = n())
-
-data_for_plot <- data_w_cor_lifetime %>%
-  mutate(pair_name = paste0(x_name, " | ", y_name)) %>%
-  arrange(x_name, y_name) %>%
-  group_by(pair_name) %>%
+## Plot lifetime, total ----
+data_for_plot_life <- cor_lifetime %>%
   # Per pair, mean and max
+  group_by(pair_name) %>%
   mutate(mean_per_pair = mean(cor, na.rm = TRUE),
          max_per_pair = max(cor)) %>%
   # Calculate mean of Russian pair
@@ -319,19 +321,17 @@ data_for_plot <- data_w_cor_lifetime %>%
   ) %>%
   ungroup() %>%
   select(-c(cor_abs)) %>%
-  filter(x_name %in% top_topics_name | y_name %in% top_topics_name) %>%
   select(sub_group, pair_name, cor, mean_per_pair,
          mean_per_pair_russia, diff_russia_abs, diff_russia_rel_abs)
 
-data_for_plot
+data_for_plot_life_top <- data_for_plot_life %>%
+  slice_max(order_by = diff_russia_rel_abs, n = 4*12) #distinct(pair_name) %>% nrow()
 
 ## Plot correlation with points ----
-data_for_plot %>%
-  slice_max(order_by = diff_russia_rel_abs, n = 4*10) %>% #distinct(pair_name) %>% nrow()
-  # filter(diff_russia_abs > 0.045) %>%
-  mutate(
-    #half = if_else(mean_per_pair > 0.07, "", " "),
-    pair_name = fct_reorder(pair_name, mean_per_pair)) %>%
+data_for_plot_life_top %>%
+  mutate(pair_name = fct_reorder(pair_name, mean_per_pair),
+         #half = if_else(mean_per_pair > 0.07, "", " ")
+  ) %>%
   ggplot(.,
          aes(x = cor,
              y = pair_name)) +
@@ -349,29 +349,67 @@ data_for_plot %>%
   theme_speciale +
   guides(colour = guide_legend(nrow = 2))
 
-save_plot_speciale("output-figures/analysis_pairwise.png", height = 19)
+save_plot_speciale("output-figures/analysis_stm_pairwise.png", height = 19)
+
+## Plot correlation over time ----
+# Data
+data_for_plot_time <- cor_time %>%
+  filter(pair_name %in% data_for_plot_life_top$pair_name) %>%
+  #filter(grepl("FACA", pair_name)) %>%
+  filter(year(time) >= 2021) %>%
+  filter(year(time) < 2023) %>%
+  # Index
+  group_by(sub_group, pair_name) %>%
+  mutate(index = cor/cor[time == as.Date("2021-07-01")],
+         index = index*100)
+
+# Plot
+data_for_plot_time %>% #distinct(pair_name)
+  ggplot(aes(x = time,
+             y = index)) +
+  geom_smooth(aes(colour = sub_group,
+                  linetype = sub_group),
+              se = FALSE, linewidth = 1) +
+  geom_vline(xintercept = as.Date("2020-12-15")) +
+  geom_hline(yintercept = 0) +
+  facet_wrap(~pair_name, scales = "free",
+             labeller = label_wrap_gen()
+  ) +
+  scale_colour_manual(name = "", values = colours_groups) +
+  scale_linetype_manual(name = "", values = lines_group) +
+  scale_x_date(labels = dateformat(), date_breaks = "12 months") +
+  labs(title = "Correlation for topic pairs per month",
+       subtitle = NULL,
+       x = NULL,
+       y = "Correlation statistic",
+       caption = "Source: William Rohde Madsen.") +
+  theme_speciale +
+  theme(panel.grid.major.x = element_blank())
+
+save_plot_speciale("output-figures/appendix_stm_cor_over_time.png", height = 23, width = 31)
+
 
 
 # Correlation numbers -----
 ## Relative -----
 # Top 10
-data_for_plot %>%
+data_for_plot_life %>%
   select(sub_group, pair_name, diff_russia_rel_abs) %>%
   slice_max(order_by = diff_russia_rel_abs, n = 4*10) %>%
   #summarise(diff_russia_rel_abs = mean(diff_russia_rel_abs)) %>%
   filter(diff_russia_rel_abs == max(diff_russia_rel_abs))
 
-data_for_plot
+data_for_plot_life
 
 # Mean among all
-data_for_plot$diff_russia_rel_abs %>%
+data_for_plot_life$diff_russia_rel_abs %>%
   mean()
 
-data_for_plot %>%
+data_for_plot_life %>%
   mutate(binary = diff_russia_rel_abs < 20) %>%
   group_by(binary) %>%
   summarise(n = n())
-  
+
 # Density
 data_for_plot %>%
   arrange(diff_russia_rel_abs) %>%
@@ -387,7 +425,7 @@ data_for_plot %>%
   theme_speciale +
   guides(colour = guide_legend(nrow = 2))
 
-save_plot_speciale("output-figures/appendix_distribution_corr.png")
+save_plot_speciale("output-figures/appendix_stm_distribution_cor.png")
 
 
 

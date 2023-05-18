@@ -36,7 +36,7 @@ many_models <- with_progress({
 
 
 # Save models ----
-save(many_models, file = "data-formatted/many_models.Rdata")
+#save(many_models, file = "data-formatted/many_models.Rdata")
 
 
 # Fit by content --------
