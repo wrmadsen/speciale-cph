@@ -96,6 +96,7 @@ greenl_speciale <- "#90ee90"
 purple_speciale <- "#522175"
 blued_speciale <- "#2e00c4"
 bluel_speciale <- "#2A6DBE"
+bluel2_speciale <- "#ADD8E6"
 red_speciale <- "#B42418"
 redd_speciale <- "#8B0000"
 redl_speciale <- "#FFCCCB"
@@ -107,15 +108,12 @@ gold_speciale <- "#D4AF37"
 crimson_red <- "#DC143C"
 
 # Groups-specific
-colours_groups <- c("Ndjoni Sango" = redl_speciale,
+colours_groups <- c("Ndjoni Sango" = redd_speciale,
                     "Radio Lengo Songo" = redd_speciale,
-                    "Radio Ndeke Luka" = greend_speciale,
-                    "RJDH" = greenl_speciale,
-                    "Non-Russian total" = greenm_speciale,
-                    "Non-Russian average" = greenm_speciale,
-                    "Pro-Russian total" = red_speciale,
-                    "Pro-Russia" = red_speciale,
-                    "Other" = greenm_speciale)
+                    "Radio Ndeke Luka" = bluel2_speciale,
+                    "RJDH" = bluel2_speciale,
+                    "Pro-Russian media" = redd_speciale,
+                    "Benchmark media" = bluel2_speciale)
 
 bw_colours_groups <- c("Ndjoni Sango" = "black",
                        "Radio Lengo Songo" = "grey5",
@@ -124,15 +122,17 @@ bw_colours_groups <- c("Ndjoni Sango" = "black",
 
 # http://sape.inf.usi.ch/quick-reference/ggplot2/linetype
 lines_group <- c("Ndjoni Sango" = "solid",
-                 "Radio Lengo Songo" = "solid",
-                 "Radio Ndeke Luka" = "dashed",
+                 "Radio Lengo Songo" = "dashed",
+                 "Radio Ndeke Luka" = "solid",
                  "RJDH" = "dashed")
 
 # http://sape.inf.usi.ch/quick-reference/ggplot2/shape
 points_group <- c("Ndjoni Sango" = 16,
                   "Radio Lengo Songo" = 17,
                   "Radio Ndeke Luka" = 5,
-                  "RJDH" = 6)
+                  "RJDH" = 6,
+                  "Pro-Russian media" = 16,
+                  "Benchmark media" = 5)
 
 # Annotation size ----
 # when text size
@@ -188,10 +188,7 @@ save_plot_speciale <- function(name, width = 28.6, height = 17.9){
   
   # Use heights of macbook for ease
   #width <- 28.6 # 50
-  
   #height <- 17.9 # 30
-  
-  #plot_width/plot_height # 1.666667
   
   # Save pdf with empty first page
   # use ragg and tiff to deal with font problem?
