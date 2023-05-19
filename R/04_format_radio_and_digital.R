@@ -212,7 +212,7 @@ russian_outlets <- c("Radio Lengo Songo", "Ndjoni Sango")
 
 master_text <- bind_rows(master_radio, master_digital) %>%
   arrange(group, date) %>%
-  mutate(orient = if_else(sub_group %in% russian_outlets, "Pro-Russia", "Other")) %>%
+  mutate(orient = if_else(sub_group %in% russian_outlets, "Pro-Russian media", "Benchmark media")) %>%
   select(orient, everything())
 
 ## Turn lower case ----
@@ -292,9 +292,10 @@ master_text <- master_text %>%
 
 ## Verify sample again ----
 master_text %>%
-  filter(text_nchar < 500) %>%
+  filter(text_nchar > 200) %>%
   #filter(sub_group == "Ndjoni Sango") %>%
   #filter(sub_group == "Radio Ndeke Luka") %>%
+  #filter(sub_group == "RJDH") %>%
   select(sub_group, text, text_nchar, url) %>%
   slice_sample(n = 500) %>%
   arrange(text_nchar) #%>% view()
