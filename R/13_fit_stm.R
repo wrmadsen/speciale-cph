@@ -38,19 +38,21 @@ many_models <- with_progress({
 # Save models ----
 #save(many_models, file = "data-formatted/many_models.Rdata")
 
+# Fit and save single model to get it done quick ----
+# K = 20 based on the results of 14_optimal_K.R
+master_stm <- stm::stm(documents = master_dfm,
+                       prevalence = ~sub_group,
+                       K = 20,
+                       seed = 12345)
 
-# Fit by content --------
-# master_stm_content <- stm(documents = master_dfm,
-#                           content = ~sub_group,
-#                           K = 30,
-#                           seed = 12345)
-# 
-# save(master_stm_content, file = "data-formatted/master_stm_content.Rdata")
-# 
-# 
-# plot(master_stm_content, 
-#      topics = c(3),
-#      type = "perspectives")
+save(master_stm, file = "data-formatted/master_stm.Rdata")
+
+# Save and load
+# (master_stm <- many_models[[3]])
+# save(master_stm, file = "data-formatted/master_stm.Rdata")
+
+
+
 
 
 
