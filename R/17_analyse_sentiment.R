@@ -22,7 +22,7 @@ sentiment_per_doc_thetas_sub %>%
   geom_col(aes(fill = sub_group), show.legend = FALSE) +
   facet_wrap(~year) +
   scale_fill_manual(name = "", values = colours_groups) +
-  scale_x_continuous(breaks = seq(-0.5, 0.5, 0.1)) +
+  scale_x_continuous(breaks = seq(-0.5, 0.5, 0.25)) +
   labs(title = "Mean sentiment of documents per year by media outlets",
        x = "Average sentiment per document",
        y = NULL,
@@ -51,8 +51,7 @@ master_tokens_sentiment %>%
   scale_linetype_manual(name = "", values = lines_group) +
   labs(title = "Variance of sentiment per media",
        x = NULL,
-       y = NULL,
-       caption = "Source: William Rohde Madsen.") +
+       y = NULL) +
   theme_speciale
 
 master_tokens_sentiment %>%
@@ -60,11 +59,17 @@ master_tokens_sentiment %>%
   mutate(year = as.factor(year)) %>%
   ggplot(.,
          aes(x = afinn_median,
-             colour = year)) +
-  geom_density() +
+             group = year)) +
+  geom_density(aes(colour = sub_group), show.legend = FALSE) +
   geom_vline(xintercept = 3) +
   geom_vline(xintercept = -3) +
-  facet_wrap(~sub_group)
+  facet_wrap(~sub_group) +
+  scale_colour_manual(name = "", values = colours_groups) +
+  scale_linetype_manual(name = "", values = lines_group) +
+  labs(title = "Distribution of sentiment per media",
+       x = NULL,
+       y = NULL) +
+  theme_speciale
 
 ## Based on how many tokens per document ----
 
@@ -83,14 +88,13 @@ data_for_plot %>%
   ggplot(.,
          aes(x = year,
              y = mean)) +
-  geom_point(size = 3) + 
+  #geom_point(size = 3) + 
   geom_line(aes(colour = sub_group, linetype = sub_group), size = 2) +
   scale_color_manual(name = "", values = colours_groups) +
   scale_linetype_manual(name = "", values = lines_group) +
-  labs(title = "Average number of tokens used to calculate sentiment per document",
+  labs(title = "Mean number of tokens used to calculate sentiment per document",
        x = NULL,
-       y =  "Mean number of tokens",
-       caption = "Source: William Rohde Madsen.") +
+       y =  "Mean number of tokens") +
   theme_speciale
 
 ## Per topic ----
@@ -112,7 +116,7 @@ data_for_plot %>%
   facet_wrap(~sub_group, scales = "free") +
   scale_y_reordered() +
   scale_fill_manual(name = "", values = c("1" = gold_speciale, "0" = bluel_speciale)) +
-  labs(title = "Average number of tokens used to calculate sentiment per document",
+  labs(title = "Mean number of tokens used to calculate sentiment per document and topic",
        y = NULL,
        x =  "Mean number of tokens",
        caption = "Source: William Rohde Madsen.") +
@@ -123,6 +127,7 @@ data_for_plot %>%
 # Plot sentiment per year
 # Calculate
 data_for_plot <- sentiment_per_doc_thetas_sub %>%
+  filter(year >= 2020) %>%
   filter(year < 2023) %>%
   mutate(time = floor_date(month, "quarter")) %>%
   group_by(sub_group, time) %>%
@@ -139,8 +144,7 @@ data_for_plot %>%
   scale_linetype_manual(name = "", values = lines_group) +
   labs(title = "Mean quarterly sentiment per media outlet",
        x = NULL,
-       y =  "Mean sentiment per quarter",
-       caption = "Source: William Rohde Madsen.") +
+       y =  "Mean sentiment per quarter") +
   theme_speciale
 
 save_plot_speciale("output-figures/analysis_senti_mean_per_quarter.png", height = 23, width = 30)
@@ -169,16 +173,19 @@ data_for_plot %>%
   ggplot(.,
          aes(x = mean_per_topic_and_group,
              y = topic_name)) +
-  geom_point(aes(shape = sub_group, colour = sub_group), size = 5) +
+  geom_point(aes(shape = sub_group, colour = sub_group), size = 7, stroke = 2) +
   geom_vline(xintercept = 0) +
   facet_wrap(~half, scales = "free") +
   scale_color_manual(name = "", values = colours_groups) +
   scale_shape_manual(name = "", values = points_group) +
-  labs(title = "Mean relative sentiment for topics of the documents by media",
-       x = "Mean relative sentiment",
+  labs(title = "Mean sentiment for topics per media",
+       x = "Mean sentiment",
        y = NULL,
        caption = "Source: William Rohde Madsen.") +
-  theme_speciale
+  theme_speciale +
+  guides(colour = guide_legend(nrow = 2))
+
+save_plot_speciale("output-figures/analysis_senti_mean_per_topic.png", height = 23, width = 30)
 
 ## Sentiment over time ----
 # Calculate
@@ -225,51 +232,55 @@ data_for_plot %>%
 
 # Correlation between media and sentiment -----
 
-# Linear model? Simple? See UCL slides
-library(tidymodels)
-
-lm(difference ~ year + sub_group + topic_name, data = data_for_plot) %>%
-  summary() %>%
-  tidy() %>%
-  arrange(term) %>%
-  print(n = 25)
-
-
 # Correlations -----
 
 ## Topic prop. and sentiment ----
-master_sentiment_raw %>%
-  filter() %>%
+sentiment_per_doc_thetas %>% distinct(topic_name) %>% pull() # check out topic names
+
+data_for_plot <- sentiment_per_doc_thetas %>%
+  select(-topic_name) %>%
+  pivot_wider(names_from = topic_no, values_from = topic_proportion) %>%
+  transmute(sub_group, document, afinn_document, difference = x17 - x7)
+
+data_for_plot %>%
   ggplot(.,
-         aes(x = topic_proportion,
+         aes(x = difference*100,
              y = afinn_document,
              group = sub_group)) +
-  geom_point(fill = "grey99", shape = 21, alpha = 0.05) +
+  geom_point(fill = "grey99", shape = 21, alpha = 0.02) +
   geom_smooth(aes(colour = sub_group, linetype = sub_group),
-              se = FALSE,
-              method = "lm") +
-  facet_wrap(~topic_name, scales = "free") +
+              se = FALSE, linewidth = 2, method = "lm", show.legend = FALSE) +
+  # Arrow 1
+  geom_segment(data = data_for_plot %>% filter(sub_group == "Ndjoni Sango"),
+               aes(x = 10, y = -2, xend = 60, yend = -2),
+               linewidth = 0.7, colour = "black",
+               arrow = arrow(length = unit(0.4, "cm"))) +
+  geom_text(data = data_for_plot %>% filter(sub_group == "Ndjoni Sango"),
+            aes(x = 35, y = -2.5, label = "More about MINUSCA, less about victims"),
+            family = theme_font, colour = "black", size = 5,
+  ) +
+  # Arrow 2
+  geom_segment(data = data_for_plot %>% filter(sub_group == "Ndjoni Sango"),
+               aes(x = -87, y = -1.45, xend = -87, yend = 1.45),
+               linewidth = 0.7, colour = "black",
+               arrow = arrow(length = unit(0.4, "cm"))) +
+  geom_text(data = data_for_plot %>% filter(sub_group == "Ndjoni Sango"),
+            aes(x = -93, y = 0, label = "More positive"),
+            family = theme_font, colour = "black", size = 5,
+            angle = 90) +
+  # Other
+  facet_wrap(~sub_group#, scales = "free"
+  ) +
   scale_colour_manual(name = "", values = colours_groups) +
   scale_linetype_manual(name = "", values = lines_group) +
-  labs(title = "Correlation between topic proportion and sentiment score",
-       x = "Topic proportion, %",
-       y = "Sentiment score, AFINN",
+  labs(title = "Russian media use more negative language to describe MINUSCA than victims",
+       subtitle = "Each point is a document. The sentiment is calculated for each document.\nThen the difference in proportion is calculated for two topics in each document.",
+       x = "Topic proportion difference, percentage points",
+       y = "Sentiment score",
        caption = "Source: William Rohde Madsen.") +
   theme_speciale
 
-
-## Multilevel model ----
-
-lm(score_document ~ topic_share + year + sub_group*topic, data = master_sentiment_raw) %>% summary()
-
-
-library(lme4)
-multi_1 <- lme4::lmer(afinn_document ~ topic_proportion + (1 + topic_name | sub_group),
-                      data = master_sentiment_raw_sub)
-
-summary(multi_1)
-
-
+save_plot_speciale("output-figures/analysis_senti_cor_minusca_victims.png", height = 23, width = 30)
 
 
 

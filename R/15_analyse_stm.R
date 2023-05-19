@@ -1,8 +1,4 @@
 # Load master_stm ----
-# Save and load
-#(master_stm <- many_models[[3]])
-
-#save(master_stm, file = "data-formatted/master_stm.Rdata")
 load("data-formatted/master_stm.Rdata")
 
 (number_of_topics <- master_stm$settings$dim$K)
@@ -82,26 +78,26 @@ columns_to_pivot <- paste0("x", 1:number_of_topics)
 master_dt_thetas_long <- master_dt_thetas %>%
   pivot_longer(cols = all_of(columns_to_pivot), names_to = "topic_no", values_to = "topic_proportion") %>%
   mutate(topic_name = case_match(topic_no,
-                                 "x1" ~ "1 Soc., biz.",
-                                 "x2" ~ "2 Gas, trans.",
-                                 "x3" ~ "3 Police",
-                                 "x4" ~ "4 Rus., foreign rel.",
-                                 "x5" ~ "5 EU, WBG",
-                                 "x6" ~ "6 Elex., const. court",
-                                 "x7" ~ "7 Victims, refugees",
-                                 "x8" ~ "8 Int. justice",
-                                 "x9" ~ "9 Covid-19",
-                                 "x10" ~ "10 Strikes, corruption",
-                                 "x11" ~ "11 Education",
-                                 "x12" ~ "12 Urban, develop.",
-                                 "x13" ~ "13 Sport",
-                                 "x14" ~ "14 Health, rel.",
-                                 "x15" ~ "15 Culture, celeb.",
-                                 "x16" ~ "16 Enemy, FR, Bozize",
-                                 "x17" ~ "17 MINUSCA, rebels",
-                                 "x18" ~ "18 FACA, combat",
-                                 "x19" ~ "19 Rep. dialogue, Khartoum",
-                                 "x20" ~ "20 Parl.",
+                                 "x1" ~ "Society",
+                                 "x2" ~ "Gas prices",
+                                 "x3" ~ "Police",
+                                 "x4" ~ "Russia and foreign relations",
+                                 "x5" ~ "Foreign aid",
+                                 "x6" ~ "Election scrutiny",
+                                 "x7" ~ "Civilian victims",
+                                 "x8" ~ "Justice",
+                                 "x9" ~ "Covid-19",
+                                 "x10" ~ "Labour resistance",
+                                 "x11" ~ "Education",
+                                 "x12" ~ "Bangui",
+                                 "x13" ~ "Sport",
+                                 "x14" ~ "Religion",
+                                 "x15" ~ "Celebrations",
+                                 "x16" ~ "Enemy, France, Bozize",
+                                 "x17" ~ "MINUSCA",
+                                 "x18" ~ "CAR army and Russians",
+                                 "x19" ~ "Peace talks",
+                                 "x20" ~ "Parliament",
                                  "x99" ~ "At least one condition must be supplied",
                                  .default = as.character(topic_no)))
 
@@ -127,71 +123,103 @@ top_topics_no <- c("x16", "x5", "x19",
    mutate(prop = prop*100,
           prop = round(prop, 2)
    ) %>%
-   select(topic_name, prop, frex))
+   transmute(topic_no = gsub("x", "", topic_no) %>% as.integer(),
+             topic_name,
+             prop,
+             frex))
 
 # Save as Excel
 table_of_topics %>%
-  rename("Topic" = topic_name, `Prop. (%)` = prop, "FREX" = frex) %>%
+  rename("No." = topic_no, "Topic" = topic_name, `Prop. (%)` = prop, "FREX" = frex) %>%
   write.xlsx(., file = "output-tables/analysis_stm_table_of_topics.xlsx")
 
 # Save flextable
-table_of_topics %>%
-  # To flextable
-  flextable() %>%
-  width(., width = 2) %>%
-  width(., j = "frex", width = 4) %>%
-  width(., j = "prop", width = 1) %>%
-  #border_inner_h(.) %>%
-  set_header_labels(.,
-                    topic_name = "Topic",
-                    prop = "Prop. (%)",
-                    frex = "FREX") %>%
-  save_as_docx(path = "output-tables/analysis_stm_table_of_topics.docx")
+# table_of_topics %>%
+#   # To flextable
+#   flextable() %>%
+#   width(., width = 2) %>%
+#   width(., j = "frex", width = 4) %>%
+#   width(., j = "prop", width = 1) %>%
+#   #border_inner_h(.) %>%
+#   set_header_labels(.,
+#                     topic_name = "Topic",
+#                     prop = "Prop. (%)",
+#                     frex = "FREX") %>%
+#   save_as_docx(path = "output-tables/analysis_stm_table_of_topics.docx")
 
-# Topic proportion total by group ----
-# Calculate 
+# Topic proportion total  ----
+# Calculate
+## Per group ----
 data_for_plot <- master_dt_thetas_long %>%
   group_by(sub_group, topic_name, topic_no) %>%
-  summarise(mean_per_group = mean(topic_proportion, na.rm = TRUE)*100) %>%
+  summarise(mean = mean(topic_proportion, na.rm = TRUE)*100) %>%
   group_by(topic_name, topic_no) %>%
-  mutate(mean_overall = mean(mean_per_group, na.rm = TRUE)) %>%
+  mutate(mean_to_sort_by = mean(mean, na.rm = TRUE)) %>%
   ungroup()
 
 # Plot with points
 data_for_plot %>%
-  mutate(half = if_else(mean_overall > 4.95, "", " "),
-         topic_name = fct_reorder(topic_name, mean_overall)) %>%
+  mutate(half = if_else(mean_to_sort_by > 4.95, "", " "),
+         topic_name = fct_reorder(topic_name, mean_to_sort_by)) %>%
   ggplot(.,
-         aes(x = mean_per_group,
+         aes(x = mean,
              y = topic_name)) +
-  geom_point(aes(shape = sub_group, colour = sub_group), size = 6) +
+  geom_point(aes(shape = sub_group, colour = sub_group), size = 7, stroke = 2) +
   facet_wrap(~half, scales = "free") +
   scale_color_manual(name = "", values = colours_groups) +
   scale_shape_manual(name = "", values = points_group) +
   labs(title = "Total mean proportion for topics of the content by media outlets",
        x = "Total mean proportion of content, %",
-       y = NULL,
-       caption = "Source: William Rohde Madsen.") +
+       y = NULL) +
   theme_speciale +
   guides(colour = guide_legend(nrow = 2))
 
 save_plot_speciale("output-figures/analysis_stm_prop_mean_by_group.png",
                    height = 23, width = 30)
 
+## Per orient ------
+data_for_plot <- master_dt_thetas_long %>%
+  group_by(orient, topic_name, topic_no) %>%
+  summarise(mean = mean(topic_proportion, na.rm = TRUE)*100) %>%
+  group_by(topic_name) %>%
+  mutate(mean_to_sort_by = mean[orient == "Pro-Russian media"]) %>%
+  ungroup() %>%
+  arrange(topic_name)
+
+# Plot with points
+data_for_plot %>%
+  mutate(half = if_else(mean_to_sort_by > 4.95, "", " "),
+         topic_name = fct_reorder(topic_name, mean_to_sort_by)) %>%
+  ggplot(.,
+         aes(x = mean,
+             y = topic_name)) +
+  geom_point(aes(shape = orient, colour = orient), size = 7, stroke = 2) +
+  facet_wrap(~half, scales = "free_y") +
+  scale_color_manual(name = "", values = colours_groups) +
+  scale_shape_manual(name = "", values = points_group) +
+  labs(title = "Total mean proportion for topics of the content by media outlets",
+       x = "Total mean proportion of content, %",
+       y = NULL) +
+  theme_speciale +
+  guides(colour = guide_legend(nrow = 1))
+
+save_plot_speciale("output-figures/analysis_stm_prop_mean_by_orient.png",
+                   height = 23, width = 30)
+
 # Check numbers
 data_for_plot %>%
   filter(grepl("Enemy", topic_name))
 
-# Calculate average difference b.t. groups' mean -----
+## Calculate average difference b.t. groups' mean -----
 data_for_calc <- data_for_plot %>%
-  select(-c(topic_no, mean_overall))
+  select(-c(topic_no, mean_to_sort_by))
 
 left_join(data_for_calc, data_for_calc, by = "topic_name") %>%
-  filter(sub_group.x != sub_group.y) %>%
+  filter(orient.x != orient.y) %>%
   arrange(topic_name) %>%
-  mutate(diff = mean_per_group.x - mean_per_group.y,
+  mutate(diff = mean.x - mean.y,
          diff_ab = abs(diff)) %>%
-  group_by(sub_group.x, sub_group.y) %>%
+  group_by(orient.x, orient.y) %>%
   summarise(mean = mean(diff_ab))
 
 # Topic proportion over time by group ----
@@ -210,13 +238,13 @@ data_for_plot <- master_dt_thetas_long %>%
 # Plot
 data_for_plot %>%
   filter(year(month) >= 2020) %>%
-  filter(topic_no %in% top_topics_no) %>%
+  filter(topic_no %in% top_topics_no) %>% #distinct(topic_name) %>% %>% pull
   ggplot(aes(x = month,
              y = mean)) +
   geom_smooth(aes(colour = sub_group,
                   linetype = sub_group),
-              se = FALSE, linewidth = 1) +
-  geom_vline(xintercept = as.Date("2020-12-15")) +
+              se = FALSE, linewidth = 2) +
+  #geom_vline(xintercept = as.Date("2020-12-15")) +
   facet_wrap(~topic_name, scales = "free",
              labeller = label_wrap_gen()
   ) +
@@ -224,15 +252,13 @@ data_for_plot %>%
   scale_linetype_manual(name = "", values = lines_group) +
   scale_x_date(labels = dateformat(), date_breaks = "16 months") +
   labs(title = "Mean proportion for topics of the monthly content by media outlets",
-       subtitle = "Index base is February 2022.",
+       #subtitle = "Index base is February 2022.",
        x = NULL,
-       y = "Proportion of content, %",
-       caption = "Source: William Rohde Madsen.") +
+       y = "Proportion of content, %") +
   theme_speciale +
   theme(panel.grid.major.x = element_blank())
 
 save_plot_speciale("output-figures/analysis_stm_prop_mean_over_time.png", height = 23, width = 31)
-
 
 # Topic correlations ----
 ## Format and join ----
@@ -284,7 +310,7 @@ pairs_w_values %>% distinct(x_name, y_name)
 # Subset top topics
 pairs_w_values <- pairs_w_values %>%
   filter(x_name %in% top_topics_name | y_name %in% top_topics_name) %>%
-  mutate(pair_name = paste0(x_name, " | ", y_name)) %>%
+  mutate(pair_name = paste0(x_name, " -- ", y_name)) %>%
   arrange(x_name, y_name)
 
 pairs_w_values
@@ -329,65 +355,60 @@ data_for_plot_life_top <- data_for_plot_life %>%
 
 ## Plot correlation with points ----
 data_for_plot_life_top %>%
-  mutate(pair_name = fct_reorder(pair_name, mean_per_pair),
-         #half = if_else(mean_per_pair > 0.07, "", " ")
-  ) %>%
+  mutate(pair_name = fct_reorder(pair_name, mean_per_pair_russia),) %>%
   ggplot(.,
          aes(x = cor,
              y = pair_name)) +
-  geom_point(aes(shape = sub_group, colour = sub_group), size = 5) +
+  geom_point(aes(shape = sub_group, colour = sub_group), size = 7, stroke = 2) +
   geom_vline(xintercept = 0) +
   #facet_wrap(~half, scales = "free") +
   scale_color_manual(name = "", values = colours_groups) +
   scale_shape_manual(name = "", values = points_group) +
   #scale_y_discrete(labels = wrap_format(20)) +
-  labs(title = "Correlation of topic pairs in the total content by media outlet",
-       subtitle = "Selection of pairs where Russian-supported media demonstrated largest difference",
-       x = "Correlation statistic for topic pairs",
-       y = NULL,
-       caption = "Source: William Rohde Madsen.") +
+  labs(title = "Correlation of topic pairs",
+       subtitle = NULL, #"Selection of pairs where Russian-supported media demonstrated largest difference",
+       x = "Correlation statistic (Pearson)",
+       y = NULL) +
   theme_speciale +
   guides(colour = guide_legend(nrow = 2))
 
 save_plot_speciale("output-figures/analysis_stm_pairwise.png", height = 19)
 
 ## Plot correlation over time ----
-# Data
-data_for_plot_time <- cor_time %>%
-  filter(pair_name %in% data_for_plot_life_top$pair_name) %>%
-  #filter(grepl("FACA", pair_name)) %>%
-  filter(year(time) >= 2021) %>%
-  filter(year(time) < 2023) %>%
-  # Index
-  group_by(sub_group, pair_name) %>%
-  mutate(index = cor/cor[time == as.Date("2021-07-01")],
-         index = index*100)
-
-# Plot
-data_for_plot_time %>% #distinct(pair_name)
-  ggplot(aes(x = time,
-             y = index)) +
-  geom_smooth(aes(colour = sub_group,
-                  linetype = sub_group),
-              se = FALSE, linewidth = 1) +
-  geom_vline(xintercept = as.Date("2020-12-15")) +
-  geom_hline(yintercept = 0) +
-  facet_wrap(~pair_name, scales = "free",
-             labeller = label_wrap_gen()
-  ) +
-  scale_colour_manual(name = "", values = colours_groups) +
-  scale_linetype_manual(name = "", values = lines_group) +
-  scale_x_date(labels = dateformat(), date_breaks = "12 months") +
-  labs(title = "Correlation for topic pairs per month",
-       subtitle = NULL,
-       x = NULL,
-       y = "Correlation statistic",
-       caption = "Source: William Rohde Madsen.") +
-  theme_speciale +
-  theme(panel.grid.major.x = element_blank())
-
-save_plot_speciale("output-figures/appendix_stm_cor_over_time.png", height = 23, width = 31)
-
+# # Data
+# data_for_plot_time <- cor_time %>%
+#   filter(pair_name %in% data_for_plot_life_top$pair_name) %>%
+#   filter(year(time) >= 2021) %>%
+#   filter(year(time) < 2023) %>%
+#   # Index
+#   group_by(sub_group, pair_name) %>%
+#   mutate(index = cor/cor[time == as.Date("2021-01-01")],
+#          index = index*100)
+# 
+# # Plot
+# data_for_plot_time %>% #distinct(pair_name)
+#   ggplot(aes(x = cor,
+#              y = index)) +
+#   geom_smooth(aes(colour = sub_group,
+#                   linetype = sub_group),
+#               se = FALSE, linewidth = 1)
+#   geom_vline(xintercept = as.Date("2020-12-15")) +
+#   geom_hline(yintercept = 0) +
+#   facet_wrap(~pair_name, scales = "free",
+#              labeller = label_wrap_gen()
+#   ) +
+#   scale_colour_manual(name = "", values = colours_groups) +
+#   scale_linetype_manual(name = "", values = lines_group) +
+#   scale_x_date(labels = dateformat(), date_breaks = "12 months") +
+#   labs(title = "Correlation for topic pairs per month",
+#        subtitle = NULL,
+#        x = NULL,
+#        y = "Correlation statistic") +
+#   theme_speciale +
+#   theme(panel.grid.major.x = element_blank())
+# 
+# save_plot_speciale("output-figures/appendix_stm_cor_over_time.png", height = 23, width = 31)
+# 
 
 
 # Correlation numbers -----
@@ -411,17 +432,18 @@ data_for_plot_life %>%
   summarise(n = n())
 
 # Density
-data_for_plot %>%
+data_for_plot_life %>%
   arrange(diff_russia_rel_abs) %>%
   transmute(diff_russia_rel_abs = round(diff_russia_rel_abs, 0)) %>%
   ggplot(.,
          aes(x = diff_russia_rel_abs)) +
-  geom_bar() +
+  #geom_bar() +
+  geom_density() +
+  #scale_x_continuous(trans = "log10") +
   labs(title = "Distribution of absolute relative difference in correlation of topic pairs",
        subtitle = "Percentages have been rounded to nearest",
        x = "Absolute relative difference in correlation, %",
-       y = NULL,
-       caption = "Source: William Rohde Madsen.") +
+       y = NULL) +
   theme_speciale +
   guides(colour = guide_legend(nrow = 2))
 

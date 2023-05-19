@@ -51,7 +51,7 @@ count_docs %>%
   geom_line(aes(x = week,
                 y = n_roll_index,
                 colour = sub_group,
-                linetype = sub_group), linewidth = 1) +
+                linetype = sub_group), linewidth = 1.5) +
   # Spike periods
   geom_rect(data = spike_periods,
             aes(xmin = date_middle,
@@ -73,8 +73,7 @@ count_docs %>%
   labs(title = "Index of number of articles per week for CAR media outlets",
        subtitle = "4-week rolling average and index. Index 100 is April 2020.",
        y = NULL,
-       x = NULL,
-       caption = "Source: William Rohde Madsen."
+       x = NULL
   ) +
   theme_speciale +
   theme(panel.grid.major.x = element_blank())
@@ -124,24 +123,24 @@ master_dt %>%
 
 
 
-# Read text related to spikes ----
-# May 2020
-rows_to_read_as_txt <- master_dt %>%
-  tibble() %>%
-  filter(sub_group == "Radio Lengo Songo") %>%
-  filter(date > as.Date("2021-02-01") & date < as.Date("2021-03-15")) %>%
-  select(document, date, text)
-
-nrow(rows_to_read_as_txt)
-
-# Save as txt
-# Add empty rows between existing rows
-rows_to_read_as_txt %>%
-  split(rows_to_read_as_txt$document) %>%
-  Map(rbind, ., NA) %>%
-  do.call(rbind, .) %>%
-  mutate(id = rep(rows_to_read_as_txt$document, each = 2)) #%>%
-#write.table(., file = "output/my_data.txt", sep = "")
+# # Read text related to spikes ----
+# # May 2020
+# rows_to_read_as_txt <- master_dt %>%
+#   tibble() %>%
+#   filter(sub_group == "Radio Lengo Songo") %>%
+#   filter(date > as.Date("2021-02-01") & date < as.Date("2021-03-15")) %>%
+#   select(document, date, text)
+# 
+# nrow(rows_to_read_as_txt)
+# 
+# # Save as txt
+# # Add empty rows between existing rows
+# rows_to_read_as_txt %>%
+#   split(rows_to_read_as_txt$document) %>%
+#   Map(rbind, ., NA) %>%
+#   do.call(rbind, .) %>%
+#   mutate(id = rep(rows_to_read_as_txt$document, each = 2)) #%>%
+# #write.table(., file = "output/my_data.txt", sep = "")
 
 
 

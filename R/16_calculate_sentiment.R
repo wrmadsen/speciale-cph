@@ -120,22 +120,24 @@ data_for_plot %>%
   geom_vline(xintercept = 50) +
   geom_line(aes(colour = sub_group, linetype = sub_group), size = 2,
             show.legend = FALSE) +
-  geom_point(size = 3) +
+  #geom_point(size = 3) +
   geom_text_repel(data = data_for_plot %>% filter(sub_group == "Ndjoni Sango" & rate == 0.3),
                   aes(label = paste0(rate*100, "% minimum")),
                   family = theme_font,
-                  size = 4.5) +
+                  size = 4.5,
+                  nudge_x = 30,
+                  nudge_y = 10,
+                  min.segment.length = 1) +
   scale_color_manual(name = "", values = colours_groups) +
   scale_linetype_manual(name = "", values = lines_group) +
   scale_x_continuous(breaks = seq(0, 100, 25), limits = c(0, 100)) +
   facet_wrap(~sub_group, scales = "free_y") +
   labs(title = "Balance between a high topic proportion and many documents",
        y = "Share of original documents, %",
-       x =  "Mean topic proportion, %",
-       caption = "Source: William Rohde Madsen.") +
+       x =  "Mean topic proportion, %") +
   theme_speciale
 
-#save_plot_speciale("output-figures/appendix_select_topic_prop.png")
+save_plot_speciale("output-figures/appendix_select_topic_prop.png")
 
 ### Actually do it -----
 # slice_max() is also an option
