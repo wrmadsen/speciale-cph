@@ -23,7 +23,10 @@ results_of_k <- results_of_k %>%
          iterations = map_dbl(topic_model, function(x) length(x$convergence$bound))) %>%
   select(-topic_model)
 
+# Save
 #save(results_of_k, file = "data-formatted/results_of_k.Rdata")
+
+# Load K results
 load("data-formatted/results_of_k.Rdata")
 
 # Calculate mean
@@ -62,8 +65,7 @@ results_of_k_sub %>%
              group = Metric)) +
   geom_line(aes(colour = Metric),
             linewidth = 2, alpha = 0.7, show.legend = FALSE) +
-  geom_vline(xintercept = 20, linewidth = 1.2) +
-  geom_vline(xintercept = 30, linewidth = 1.2) +
+  geom_vline(xintercept = 20, linewidth = 1) +
   facet_wrap(~Metric, scales = "free_y") +
   scale_colour_manual(name = "", values = c("Exclusivity" = redd_speciale, "Semantic coherence" = bluel_speciale)) +
   labs(title = "Exclusivity and semantic coherence for topic models",
