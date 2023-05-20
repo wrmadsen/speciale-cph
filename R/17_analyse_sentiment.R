@@ -23,10 +23,9 @@ sentiment_per_doc_thetas_sub %>%
   facet_wrap(~year) +
   scale_fill_manual(name = "", values = colours_groups) +
   scale_x_continuous(breaks = seq(-0.5, 0.5, 0.25)) +
-  labs(title = "Mean sentiment of documents per year by media outlets",
+  labs(title = "Figure X. Mean sentiment of documents per year by media outlets",
        x = "Average sentiment per document",
-       y = NULL,
-       caption = "Source: William Rohde Madsen.") +
+       y = NULL) +
   theme_speciale +
   theme(panel.grid.major.y = element_blank())
 
@@ -49,7 +48,7 @@ master_tokens_sentiment %>%
   #facet_wrap(~sub_group) +
   scale_colour_manual(name = "", values = colours_groups) +
   scale_linetype_manual(name = "", values = lines_group) +
-  labs(title = "Variance of sentiment per media",
+  labs(title = "Figure X. Variance of sentiment per media",
        x = NULL,
        y = NULL) +
   theme_speciale
@@ -66,7 +65,7 @@ master_tokens_sentiment %>%
   facet_wrap(~sub_group) +
   scale_colour_manual(name = "", values = colours_groups) +
   scale_linetype_manual(name = "", values = lines_group) +
-  labs(title = "Distribution of sentiment per media",
+  labs(title = "Figure X. Distribution of sentiment per media",
        x = NULL,
        y = NULL) +
   theme_speciale
@@ -92,7 +91,7 @@ data_for_plot %>%
   geom_line(aes(colour = sub_group, linetype = sub_group), size = 2) +
   scale_color_manual(name = "", values = colours_groups) +
   scale_linetype_manual(name = "", values = lines_group) +
-  labs(title = "Mean number of tokens used to calculate sentiment per document",
+  labs(title = "Figure X. Mean number of tokens used to calculate sentiment per document",
        x = NULL,
        y =  "Mean number of tokens") +
   theme_speciale
@@ -116,10 +115,9 @@ data_for_plot %>%
   facet_wrap(~sub_group, scales = "free") +
   scale_y_reordered() +
   scale_fill_manual(name = "", values = c("1" = gold_speciale, "0" = bluel_speciale)) +
-  labs(title = "Mean number of tokens used to calculate sentiment per document and topic",
+  labs(title = "Figure X. Mean number of tokens used to calculate sentiment per document and topic",
        y = NULL,
-       x =  "Mean number of tokens",
-       caption = "Source: William Rohde Madsen.") +
+       x =  "Mean number of tokens") +
   theme_speciale
 
 
@@ -142,12 +140,12 @@ data_for_plot %>%
   geom_hline(yintercept = 0) +
   scale_color_manual(name = "", values = colours_groups) +
   scale_linetype_manual(name = "", values = lines_group) +
-  labs(title = "Mean quarterly sentiment per media outlet",
+  labs(title = "Figure X. Mean quarterly sentiment per media outlet",
        x = NULL,
        y =  "Mean sentiment per quarter") +
   theme_speciale
 
-save_plot_speciale("output-figures/analysis_senti_mean_per_quarter.png", height = 23, width = 30)
+save_plot_speciale("output/analysis_senti_mean_per_quarter.png", height = 23, width = 30)
 
 
 # Topic plots ----
@@ -178,14 +176,13 @@ data_for_plot %>%
   facet_wrap(~half, scales = "free") +
   scale_color_manual(name = "", values = colours_groups) +
   scale_shape_manual(name = "", values = points_group) +
-  labs(title = "Mean sentiment for topics per media",
+  labs(title = "Figure X. Mean sentiment for topics per media",
        x = "Mean sentiment",
-       y = NULL,
-       caption = "Source: William Rohde Madsen.") +
+       y = NULL) +
   theme_speciale +
   guides(colour = guide_legend(nrow = 2))
 
-save_plot_speciale("output-figures/analysis_senti_mean_per_topic.png", height = 23, width = 30)
+save_plot_speciale("output/analysis_senti_mean_per_topic.png", height = 23, width = 30)
 
 ## Sentiment over time ----
 # Calculate
@@ -223,10 +220,9 @@ data_for_plot %>%
   scale_x_continuous(breaks = seq(2020, 2022, 1)) +
   scale_colour_manual(name = "", values = colours_groups[1:4]) +
   scale_linetype_manual(name = "", values = lines_group) +
-  labs(title = "Sentiment per topic per media",
+  labs(title = "Figure X. Sentiment per topic per media",
        x = NULL,
-       y = "Sentiment score",
-       caption = "Source: William Rohde Madsen.") +
+       y = "Sentiment score") +
   theme_speciale
 
 
@@ -273,14 +269,13 @@ data_for_plot %>%
   ) +
   scale_colour_manual(name = "", values = colours_groups) +
   scale_linetype_manual(name = "", values = lines_group) +
-  labs(title = "Russian media use more negative language to describe MINUSCA than victims",
+  labs(title = "Figure X. Russian media use more negative language to describe MINUSCA than victims",
        subtitle = "Each point is a document. The sentiment is calculated for each document.\nThen the difference in proportion is calculated for two topics in each document.",
        x = "Topic proportion difference, percentage points",
-       y = "Sentiment score",
-       caption = "Source: William Rohde Madsen.") +
+       y = "Sentiment score") +
   theme_speciale
 
-save_plot_speciale("output-figures/analysis_senti_cor_minusca_victims.png", height = 23, width = 30)
+save_plot_speciale("output/analysis_senti_cor_minusca_victims.png", height = 23, width = 30)
 
 
 

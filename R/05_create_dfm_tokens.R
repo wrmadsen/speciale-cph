@@ -233,8 +233,6 @@ master_dfm_tf_idf <- master_dfm %>%
 master_tokens_tbl <- master_dfm %>%
   convert_dfm_to_tibble(., master_dt)
 
-
-
 # Print or view ----
 
 ## View most popular tokens and phrases ----

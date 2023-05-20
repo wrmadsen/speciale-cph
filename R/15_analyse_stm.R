@@ -131,7 +131,7 @@ top_topics_no <- c("x16", "x5", "x19",
 # Save as Excel
 table_of_topics %>%
   rename("No." = topic_no, "Topic" = topic_name, `Prop. (%)` = prop, "FREX" = frex) %>%
-  write.xlsx(., file = "output-tables/analysis_stm_table_of_topics.xlsx")
+  write.xlsx(., file = "output/analysis_stm_table_of_topics.xlsx")
 
 # Save flextable
 # table_of_topics %>%
@@ -168,13 +168,13 @@ data_for_plot %>%
   facet_wrap(~half, scales = "free") +
   scale_color_manual(name = "", values = colours_groups) +
   scale_shape_manual(name = "", values = points_group) +
-  labs(title = "Total mean proportion for topics of the content by media outlets",
+  labs(title = "Figure X. Total mean proportion for topics of the content by media outlets",
        x = "Total mean proportion of content, %",
        y = NULL) +
   theme_speciale +
   guides(colour = guide_legend(nrow = 2))
 
-save_plot_speciale("output-figures/analysis_stm_prop_mean_by_group.png",
+save_plot_speciale("output/analysis_stm_prop_mean_by_group.png",
                    height = 23, width = 30)
 
 ## Per orient ------
@@ -197,13 +197,13 @@ data_for_plot %>%
   facet_wrap(~half, scales = "free_y") +
   scale_color_manual(name = "", values = colours_groups) +
   scale_shape_manual(name = "", values = points_group) +
-  labs(title = "Total mean proportion for topics of the content by media outlets",
+  labs(title = "Figure X. Total mean proportion for topics of the content by media outlets",
        x = "Total mean proportion of content, %",
        y = NULL) +
   theme_speciale +
   guides(colour = guide_legend(nrow = 1))
 
-save_plot_speciale("output-figures/analysis_stm_prop_mean_by_orient.png",
+save_plot_speciale("output/analysis_stm_prop_mean_by_orient.png",
                    height = 23, width = 30)
 
 # Check numbers
@@ -251,14 +251,14 @@ data_for_plot %>%
   scale_colour_manual(name = "", values = colours_groups) +
   scale_linetype_manual(name = "", values = lines_group) +
   scale_x_date(labels = dateformat(), date_breaks = "16 months") +
-  labs(title = "Mean proportion for topics of the monthly content by media outlets",
+  labs(title = "Figure X. Mean proportion for topics of the monthly content by media outlets",
        #subtitle = "Index base is February 2022.",
        x = NULL,
        y = "Proportion of content, %") +
   theme_speciale +
   theme(panel.grid.major.x = element_blank())
 
-save_plot_speciale("output-figures/analysis_stm_prop_mean_over_time.png", height = 23, width = 31)
+save_plot_speciale("output/analysis_stm_prop_mean_over_time.png", height = 23, width = 31)
 
 # Topic correlations ----
 ## Format and join ----
@@ -365,14 +365,14 @@ data_for_plot_life_top %>%
   scale_color_manual(name = "", values = colours_groups) +
   scale_shape_manual(name = "", values = points_group) +
   #scale_y_discrete(labels = wrap_format(20)) +
-  labs(title = "Correlation of topic pairs",
+  labs(title = "Figure X. Correlation of topic pairs",
        subtitle = NULL, #"Selection of pairs where Russian-supported media demonstrated largest difference",
        x = "Correlation statistic (Pearson)",
        y = NULL) +
   theme_speciale +
   guides(colour = guide_legend(nrow = 2))
 
-save_plot_speciale("output-figures/analysis_stm_pairwise.png", height = 19)
+save_plot_speciale("output/analysis_stm_pairwise.png", height = 19)
 
 ## Plot correlation over time ----
 # # Data
@@ -440,14 +440,14 @@ data_for_plot_life %>%
   #geom_bar() +
   geom_density() +
   #scale_x_continuous(trans = "log10") +
-  labs(title = "Distribution of absolute relative difference in correlation of topic pairs",
+  labs(title = "Figure X. Distribution of absolute relative difference in correlation of topic pairs",
        subtitle = "Percentages have been rounded to nearest",
        x = "Absolute relative difference in correlation, %",
        y = NULL) +
   theme_speciale +
   guides(colour = guide_legend(nrow = 2))
 
-save_plot_speciale("output-figures/appendix_stm_distribution_cor.png")
+save_plot_speciale("output/appendix_stm_distribution_cor.png")
 
 
 

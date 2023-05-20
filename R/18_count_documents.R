@@ -70,7 +70,7 @@ count_docs %>%
   scale_linetype_manual(name = "", values = lines_group) +
   scale_x_date(labels = dateformat(), date_breaks = "6 months") +
   scale_y_continuous(limits = c(0, 620)) +
-  labs(title = "Index of number of articles per week for CAR media outlets",
+  labs(title = "Figure X. Index of number of articles per week for CAR media outlets",
        subtitle = "4-week rolling average and index. Index 100 is April 2020.",
        y = NULL,
        x = NULL
@@ -78,7 +78,7 @@ count_docs %>%
   theme_speciale +
   theme(panel.grid.major.x = element_blank())
 
-save_plot_speciale("output-figures/analysis_figure_n_docs_per_week_labelled.png", width = 30)
+save_plot_speciale("output/analysis_figure_n_docs_per_week_labelled.png", width = 30)
 
 
 ## Documents per year -----
@@ -104,7 +104,7 @@ master_dt %>%
   theme_speciale +
   theme(panel.grid.major.x = element_blank())
 
-save_plot_speciale("output-figures/method_articles_per_year.png", width = 30)
+save_plot_speciale("output/method_articles_per_year.png", width = 30)
 
 
 ## In numbers ----

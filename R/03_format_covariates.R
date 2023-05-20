@@ -68,6 +68,8 @@ feel <- feel_raw %>%
 
 
 # Format AFINN sentiment -----
+afinn_raw$afinn %>% summary()
+
 # Format
 afinn <- afinn_raw %>%
   mutate(token = remove_accents(token),

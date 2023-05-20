@@ -300,6 +300,25 @@ master_text %>%
   slice_sample(n = 500) %>%
   arrange(text_nchar) #%>% view()
 
+## Count before filtering -----
+# Count per sub group
+master_text %>%
+  group_by(sub_group) %>%
+  summarise(n = n())
+  
+# Average count per month per sub group
+master_text %>%
+  group_by(sub_group, month) %>%
+  summarise(n = n()) %>%
+  group_by(sub_group) %>%
+  summarise(mean = mean(n))
+
+# Years available for each outlet
+master_text %>%
+  group_by(sub_group) %>%
+  summarise(min = min(year),
+            max = max(year))
+
 ## Drop with less than 200 characters ----
 (before <- nrow(master_text)) # before
 

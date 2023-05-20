@@ -27,7 +27,7 @@ master_tokens_sentiment <- master_tokens_sentiment %>%
 master_tokens_sentiment %>%
   group_by(category = if_else(is.na(afinn_median), "No match", "Matched")) %>%
   summarise(n = n()) %>%
-  mutate(share = (n/sum(n)*100) %>% round)
+  mutate(share = (n/sum(n)*100) %>% round(., 4))
 
 # Check some without
 #master_tokens_sentiment %>% filter(is.na(score)) %>% select(token)
@@ -137,7 +137,7 @@ data_for_plot %>%
        x =  "Mean topic proportion, %") +
   theme_speciale
 
-save_plot_speciale("output-figures/appendix_select_topic_prop.png")
+save_plot_speciale("output-figures/appendix_select_topic_prop_for_sentiment.png")
 
 ### Actually do it -----
 # slice_max() is also an option
