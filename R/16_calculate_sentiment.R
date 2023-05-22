@@ -5,6 +5,9 @@ master_tokens_sentiment <- left_join(master_tokens_tbl, afinn, by = c("token" = 
   select(document, orient, group, sub_group, text_nchar, text, token, date, week, year, month,
          afinn_mean, afinn_median)
 
+# Number of unique documents
+master_tokens_sentiment %>% distinct(document) # 12,953
+
 # Deal with outliers, bias?
 master_tokens_sentiment <- master_tokens_sentiment %>%
   mutate(across(c(afinn_mean, afinn_median), as.numeric)) #%>%
@@ -44,8 +47,15 @@ master_tokens_sentiment %>%
   select(sub_group, non_stemmed, afinn_median)
 
 # First calculate sentiment per document ----
-# And add columns based on tokens to calculate later sentiments
+# Remove if no afinn_median
+# This step removes a portion of documents
 sentiment_per_doc <- master_tokens_sentiment %>%
+  filter(!is.na(afinn_median))
+
+sentiment_per_doc %>% distinct(document) # 12,799
+
+# And add columns based on tokens to calculate later sentiments
+sentiment_per_doc <- sentiment_per_doc %>%
   filter(!is.na(afinn_median)) %>%
   group_by(document, text, text_nchar) %>%
   summarise(afinn_document = mean(afinn_median, na.rm = TRUE),
@@ -67,7 +77,7 @@ sentiment_per_doc %>%
 
 # Add thetas (topics) ----
 thetas_that_will_be_joined <- master_dt_thetas_long %>%
-  select(sub_group, document, date, month, year, topic_no, topic_name, topic_proportion, text_nchar, text, url)
+  select(orient, sub_group, document, date, month, year, topic_no, topic_name, topic_proportion, text_nchar, text, url)
 
 sentiment_per_doc_thetas <- left_join(thetas_that_will_be_joined,
                                       sentiment_per_doc %>% select(-c(text, text_nchar)),
@@ -137,13 +147,12 @@ data_for_plot %>%
        x =  "Mean topic proportion, %") +
   theme_speciale
 
-save_plot_speciale("output-figures/appendix_select_topic_prop_for_sentiment.png")
+save_plot_speciale("output/appendix_select_topic_prop_for_sentiment.png")
 
 ### Actually do it -----
 # slice_max() is also an option
 sentiment_per_doc_thetas_sub <- sentiment_per_doc_thetas %>%
-  filter(topic_proportion >= 0.2)
-
+  filter(topic_proportion >= 0.3)
 
 # Summary post -----
 

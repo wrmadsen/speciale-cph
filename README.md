@@ -1,6 +1,6 @@
-# How propaganda is designed in the Central African Republic (CAR)
+# How autocrats design propaganda in foreign countries: A quantitative case study of Russia in the Central African Republic (CAR)
 
-By William Rohde Madsen.
+By W. R. Madsen.
 
 A Master's Thesis at the University of Copenhagen. Speciale på Københavns Universitet.
 

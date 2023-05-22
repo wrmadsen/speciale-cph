@@ -22,7 +22,7 @@ topic_labels <- tibble(frex = topic_labels_matrix_frex_space,
 
 ## Find thoughts ----
 findThoughts(master_stm,
-             topic = 4,
+             topic = 3,
              texts = master_dfm$text,
              n = 1000)$docs %>%
   data.frame() %>%
@@ -30,7 +30,7 @@ findThoughts(master_stm,
   rename(text = 1) %>%
   mutate(text_nchar = nchar(text)) %>%
   arrange(text_nchar) %>%
-  filter(grepl("etat", text)) %>%
+  filter(grepl("sport", text)) %>%
   mutate(text = substr(text, 1, 300)) %>%
   #filter(grepl("loi", text)) %>%
   #filter(text_nchar < 400) %>%
@@ -71,6 +71,7 @@ master_dt_thetas %>%
   arrange(-x4) %>%
   transmute(x14, x13, x15, text) #%>% view()
 
+
 ## Pivot longer ----
 # Long version
 columns_to_pivot <- paste0("x", 1:number_of_topics)
@@ -80,7 +81,7 @@ master_dt_thetas_long <- master_dt_thetas %>%
   mutate(topic_name = case_match(topic_no,
                                  "x1" ~ "Society",
                                  "x2" ~ "Gas prices",
-                                 "x3" ~ "Police",
+                                 "x3" ~ "Law and order",
                                  "x4" ~ "Russia and foreign relations",
                                  "x5" ~ "Foreign aid",
                                  "x6" ~ "Election scrutiny",
@@ -100,6 +101,33 @@ master_dt_thetas_long <- master_dt_thetas %>%
                                  "x20" ~ "Parliament",
                                  "x99" ~ "At least one condition must be supplied",
                                  .default = as.character(topic_no)))
+
+
+# Save table with examples -----
+# Create
+data_for_table <- master_dt_thetas_long %>%
+  select(-topic_no) %>%
+  mutate(topic_name_new = if_else(grepl("CAR army|Sport|Civilian victims", topic_name), topic_name, "Other topics")) %>%
+  select(-topic_name) %>%
+  group_by(orient, sub_group, date, url, document, topic_name_new) %>%
+  summarise(topic_proportion = sum(topic_proportion)) %>%
+  ungroup() %>%
+  mutate(topic_proportion = topic_proportion*100,
+         topic_proportion = round(topic_proportion, 3)) %>%
+  pivot_wider(names_from = topic_name_new, values_from = topic_proportion) %>%
+  relocate(`Other topics`, .after = last_col()) %>%
+  group_by(sub_group) %>%
+  slice_max(order_by = date, n = 1) %>%
+  slice_min(order_by = `Other topics`, n = 1) %>%
+  select(-document) %>%
+  ungroup()
+
+# Save
+data_for_table %>%
+    write.xlsx(., file = "output/appendix_examples_of_articles.xlsx")
+
+
+
 
 # Top topics -----
 top_topics_no <- c("x16", "x5", "x19",
@@ -150,7 +178,7 @@ table_of_topics %>%
 # Topic proportion total  ----
 # Calculate
 ## Per group ----
-data_for_plot <- master_dt_thetas_long %>%
+data_for_plot_group <- master_dt_thetas_long %>%
   group_by(sub_group, topic_name, topic_no) %>%
   summarise(mean = mean(topic_proportion, na.rm = TRUE)*100) %>%
   group_by(topic_name, topic_no) %>%
@@ -158,7 +186,7 @@ data_for_plot <- master_dt_thetas_long %>%
   ungroup()
 
 # Plot with points
-data_for_plot %>%
+data_for_plot_group %>%
   mutate(half = if_else(mean_to_sort_by > 4.95, "", " "),
          topic_name = fct_reorder(topic_name, mean_to_sort_by)) %>%
   ggplot(.,
@@ -178,7 +206,7 @@ save_plot_speciale("output/analysis_stm_prop_mean_by_group.png",
                    height = 23, width = 30)
 
 ## Per orient ------
-data_for_plot <- master_dt_thetas_long %>%
+data_for_plot_orient <- master_dt_thetas_long %>%
   group_by(orient, topic_name, topic_no) %>%
   summarise(mean = mean(topic_proportion, na.rm = TRUE)*100) %>%
   group_by(topic_name) %>%
@@ -187,7 +215,7 @@ data_for_plot <- master_dt_thetas_long %>%
   arrange(topic_name)
 
 # Plot with points
-data_for_plot %>%
+data_for_plot_orient %>%
   mutate(half = if_else(mean_to_sort_by > 4.95, "", " "),
          topic_name = fct_reorder(topic_name, mean_to_sort_by)) %>%
   ggplot(.,
@@ -206,12 +234,13 @@ data_for_plot %>%
 save_plot_speciale("output/analysis_stm_prop_mean_by_orient.png",
                    height = 23, width = 30)
 
-# Check numbers
-data_for_plot %>%
-  filter(grepl("Enemy", topic_name))
+## Check numbers -----
+data_for_plot_orient %>%
+  filter(grepl("victim", topic_name)) %>%
+  transmute(orient, topic_name, mean = paste(mean))
 
 ## Calculate average difference b.t. groups' mean -----
-data_for_calc <- data_for_plot %>%
+data_for_calc <- data_for_plot_orient %>%
   select(-c(topic_no, mean_to_sort_by))
 
 left_join(data_for_calc, data_for_calc, by = "topic_name") %>%
@@ -351,7 +380,8 @@ data_for_plot_life <- cor_lifetime %>%
          mean_per_pair_russia, diff_russia_abs, diff_russia_rel_abs)
 
 data_for_plot_life_top <- data_for_plot_life %>%
-  slice_max(order_by = diff_russia_rel_abs, n = 4*12) #distinct(pair_name) %>% nrow()
+  filter(grepl("CAR army|Civilian victims|Sport|Religion", pair_name)) %>%
+  slice_max(order_by = diff_russia_rel_abs, n = 4*10)
 
 ## Plot correlation with points ----
 data_for_plot_life_top %>%
@@ -373,42 +403,6 @@ data_for_plot_life_top %>%
   guides(colour = guide_legend(nrow = 2))
 
 save_plot_speciale("output/analysis_stm_pairwise.png", height = 19)
-
-## Plot correlation over time ----
-# # Data
-# data_for_plot_time <- cor_time %>%
-#   filter(pair_name %in% data_for_plot_life_top$pair_name) %>%
-#   filter(year(time) >= 2021) %>%
-#   filter(year(time) < 2023) %>%
-#   # Index
-#   group_by(sub_group, pair_name) %>%
-#   mutate(index = cor/cor[time == as.Date("2021-01-01")],
-#          index = index*100)
-# 
-# # Plot
-# data_for_plot_time %>% #distinct(pair_name)
-#   ggplot(aes(x = cor,
-#              y = index)) +
-#   geom_smooth(aes(colour = sub_group,
-#                   linetype = sub_group),
-#               se = FALSE, linewidth = 1)
-#   geom_vline(xintercept = as.Date("2020-12-15")) +
-#   geom_hline(yintercept = 0) +
-#   facet_wrap(~pair_name, scales = "free",
-#              labeller = label_wrap_gen()
-#   ) +
-#   scale_colour_manual(name = "", values = colours_groups) +
-#   scale_linetype_manual(name = "", values = lines_group) +
-#   scale_x_date(labels = dateformat(), date_breaks = "12 months") +
-#   labs(title = "Correlation for topic pairs per month",
-#        subtitle = NULL,
-#        x = NULL,
-#        y = "Correlation statistic") +
-#   theme_speciale +
-#   theme(panel.grid.major.x = element_blank())
-# 
-# save_plot_speciale("output-figures/appendix_stm_cor_over_time.png", height = 23, width = 31)
-# 
 
 
 # Correlation numbers -----
