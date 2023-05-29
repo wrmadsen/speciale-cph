@@ -1,5 +1,8 @@
 # Load raw data
 
+# Autocracy regime types ----
+autocracy_raw <- read_excel("data-raw/GWF Autocratic Regimes 1.2/GWF Autocratic Regimes.xlsx")
+
 # Radio data -----
 read_bind_radio <- function(files){
   

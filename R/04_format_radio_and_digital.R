@@ -215,6 +215,11 @@ master_text <- bind_rows(master_radio, master_digital) %>%
   mutate(orient = if_else(sub_group %in% russian_outlets, "Pro-Russian media", "Benchmark media")) %>%
   select(orient, everything())
 
+## Check oldest and newest -----
+master_text$date %>% summary()
+
+
+
 ## Turn lower case ----
 master_text <- master_text %>%
   mutate(text = tolower(text))

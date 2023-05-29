@@ -108,27 +108,22 @@ gold_speciale <- "#D4AF37"
 crimson_red <- "#DC143C"
 
 # Groups-specific
-colours_groups <- c("Ndjoni Sango" = redd_speciale,
-                    "Radio Lengo Songo" = redd_speciale,
+colours_groups <- c("Ndjoni Sango (RUS)" = redd_speciale,
+                    "Radio Lengo Songo (RUS)" = redd_speciale,
                     "Radio Ndeke Luka" = bluel2_speciale,
                     "RJDH" = bluel2_speciale,
                     "Pro-Russian media" = redd_speciale,
                     "Benchmark media" = bluel2_speciale)
 
-bw_colours_groups <- c("Ndjoni Sango" = "black",
-                       "Radio Lengo Songo" = "grey5",
-                       "Radio Ndeke Luka" = "grey70",
-                       "RJDH" = "grey80")
-
 # http://sape.inf.usi.ch/quick-reference/ggplot2/linetype
-lines_group <- c("Ndjoni Sango" = "solid",
-                 "Radio Lengo Songo" = "dashed",
+lines_group <- c("Ndjoni Sango (RUS)" = "solid",
+                 "Radio Lengo Songo (RUS)" = "dashed",
                  "Radio Ndeke Luka" = "solid",
                  "RJDH" = "dashed")
 
 # http://sape.inf.usi.ch/quick-reference/ggplot2/shape
-points_group <- c("Ndjoni Sango" = 16,
-                  "Radio Lengo Songo" = 17,
+points_group <- c("Ndjoni Sango (RUS)" = 16,
+                  "Radio Lengo Songo (RUS)" = 17,
                   "Radio Ndeke Luka" = 5,
                   "RJDH" = 6,
                   "Pro-Russian media" = 16,

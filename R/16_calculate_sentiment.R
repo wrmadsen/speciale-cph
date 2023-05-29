@@ -26,6 +26,13 @@ master_tokens_sentiment <- master_tokens_sentiment %>%
 #   slice_sample(n = 1000) %>%
 #   select(sub_group, token, afinn_median, text)
 
+# Changes sub_group names ----
+master_tokens_sentiment <- master_tokens_sentiment %>%
+  mutate(sub_group = case_match(sub_group,
+                                "Ndjoni Sango" ~ "Ndjoni Sango (RUS)",
+                                "Radio Lengo Songo" ~ "Radio Lengo Songo (RUS)",
+                                .default = sub_group))
+
 # Share of tokens with a sentiment score
 master_tokens_sentiment %>%
   group_by(category = if_else(is.na(afinn_median), "No match", "Matched")) %>%
@@ -123,6 +130,11 @@ data_for_plot <- best_topic_selection %>%
   mutate(docs_original = max(docs),
          docs_share = docs/docs_original*100)
 
+# No minimum
+data_for_plot %>%
+  filter(rate == 0)
+
+# Plot
 data_for_plot %>%
   ggplot(.,
          aes(x = mean,
@@ -142,12 +154,12 @@ data_for_plot %>%
   scale_linetype_manual(name = "", values = lines_group) +
   scale_x_continuous(breaks = seq(0, 100, 25), limits = c(0, 100)) +
   facet_wrap(~sub_group, scales = "free_y") +
-  labs(title = "Balance between a high topic proportion and many documents",
+  labs(title = "Figure 10: Balance between a topic proportion and original documents",
        y = "Share of original documents, %",
        x =  "Mean topic proportion, %") +
   theme_speciale
 
-save_plot_speciale("output/appendix_select_topic_prop_for_sentiment.png")
+save_plot_speciale("output/fig10_appendix_select_topic_prop_for_sentiment.png")
 
 ### Actually do it -----
 # slice_max() is also an option

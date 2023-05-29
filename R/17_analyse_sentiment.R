@@ -30,12 +30,12 @@ master_tokens_sentiment %>%
   #facet_wrap(~sub_group) +
   scale_colour_manual(name = "", values = colours_groups) +
   scale_linetype_manual(name = "", values = lines_group) +
-  labs(title = "Figure X. Indexed yearly variance of sentiment per media",
-       x = NULL,
+  labs(title = "Figure 12. Yearly variance of sentiment per media",
+       x = "Indexed using 2021 as the base year.",
        y = NULL) +
   theme_speciale
 
-save_plot_speciale("output/appendix_senti_variance.png")
+save_plot_speciale("output/fig12_appendix_senti_variance.png")
 
 # master_tokens_sentiment %>%
 #   filter(year >= 2020) %>%
@@ -76,12 +76,12 @@ data_for_plot %>%
   geom_line(aes(colour = sub_group, linetype = sub_group), size = 2) +
   scale_color_manual(name = "", values = colours_groups) +
   scale_linetype_manual(name = "", values = lines_group) +
-  labs(title = "Figure X. Mean number of tokens used to calculate sentiment per document",
+  labs(title = "Figure 13. Mean number of tokens used to calculate sentiment per document",
        x = NULL,
        y =  "Mean number of tokens") +
   theme_speciale
 
-save_plot_speciale("output/appendix_senti_tokens_for_calculation.png")
+save_plot_speciale("output/fig13_appendix_senti_tokens_for_calculation.png")
 
 ## Per topic ----
 to_colour_vector_1 <- c("x18", "x16", "x19", "x17")
@@ -133,13 +133,13 @@ data_for_plot %>%
   scale_color_manual(name = "", values = colours_groups) +
   scale_linetype_manual(name = "", values = lines_group) +
   scale_x_date(labels = dateformat(), date_breaks = "8 months") +
-  labs(title = "Figure X. Mean quarterly sentiment per media outlet",
+  labs(title = "Figure 6. Mean quarterly sentiment per media outlet",
        x = NULL,
        y =  "Mean sentiment per quarter") +
   theme_speciale +
   theme(panel.grid.major.x = element_blank())
 
-save_plot_speciale("output/analysis_senti_mean_per_quarter.png", height = 23, width = 30)
+save_plot_speciale("output/fig06_analysis_senti_mean_per_quarter.png", height = 23, width = 30)
 
 ## Numbers ----
 # Average sentiment
@@ -158,12 +158,12 @@ data_for_plot %>%
   select(-orient) %>%
   pivot_wider(names_from = sub_group, values_from = mean) %>%
   clean_names() %>%
-  transmute(time, diff_russia = ndjoni_sango - radio_lengo_songo, diff_bench = radio_ndeke_luka - rjdh) %>%
+  transmute(time,
+            diff_russia = ndjoni_sango_rus - radio_lengo_songo_rus,
+            diff_bench = radio_ndeke_luka - rjdh) %>%
   mutate(across(c(2,3), abs)) %>%
   group_by() %>%
   summarise(across(c(2,3), var))
-
-
 
 # Topic plots ----
 
@@ -193,54 +193,54 @@ data_for_plot %>%
   facet_wrap(~half, scales = "free") +
   scale_color_manual(name = "", values = colours_groups) +
   scale_shape_manual(name = "", values = points_group) +
-  labs(title = "Figure X. Mean sentiment for topics per media",
+  labs(title = "Figure 7. Mean sentiment for topics per media",
        x = "Mean sentiment",
        y = NULL) +
   theme_speciale +
   guides(colour = guide_legend(nrow = 2))
 
-save_plot_speciale("output/analysis_senti_mean_per_topic.png", height = 23, width = 30)
+save_plot_speciale("output/fig07_analysis_senti_mean_per_topic.png", height = 23, width = 30)
 
 ## Sentiment over time ----
 # Calculate
-data_for_plot <- sentiment_per_doc_thetas_sub %>%
-  filter(topic_no %in% to_colour_vector_1) %>%
-  group_by(sub_group, year) %>%
-  mutate(mean_per_group_and_year = mean(afinn_document, na.rm = TRUE)) %>%
-  group_by(year, sub_group, mean_per_group_and_year, topic_name, topic_no) %>%
-  summarise(mean_per_topic_and_year_and_group = mean(afinn_document, na.rm = TRUE)) %>%
-  ungroup() %>%
-  mutate(difference = mean_per_topic_and_year_and_group - mean_per_group_and_year) %>%
-  # Calculate index
-  group_by(sub_group, topic_name) %>%
-  mutate(index = difference/difference[year == 2020],
-         index = index*100) %>%
-  ungroup() %>%
-  arrange(sub_group, topic_name)
+# data_for_plot <- sentiment_per_doc_thetas_sub %>%
+#   filter(topic_no %in% to_colour_vector_1) %>%
+#   group_by(sub_group, year) %>%
+#   mutate(mean_per_group_and_year = mean(afinn_document, na.rm = TRUE)) %>%
+#   group_by(year, sub_group, mean_per_group_and_year, topic_name, topic_no) %>%
+#   summarise(mean_per_topic_and_year_and_group = mean(afinn_document, na.rm = TRUE)) %>%
+#   ungroup() %>%
+#   mutate(difference = mean_per_topic_and_year_and_group - mean_per_group_and_year) %>%
+#   # Calculate index
+#   group_by(sub_group, topic_name) %>%
+#   mutate(index = difference/difference[year == 2020],
+#          index = index*100) %>%
+#   ungroup() %>%
+#   arrange(sub_group, topic_name)
 
 # Plot
-data_for_plot %>%
-  filter(year > 2019) %>%
-  filter(year < 2023) %>%
-  ggplot(.,
-         aes(x = year,
-             y = index,
-             colour = sub_group,
-             linetype = sub_group)) +
-  geom_point(size = 2.5) +
-  geom_line(linewidth = 1.5) +
-  geom_hline(yintercept = 0) +
-  geom_hline(yintercept = 100) +
-  facet_wrap(~topic_name,
-             scales = "free"
-  ) +
-  scale_x_continuous(breaks = seq(2020, 2022, 1)) +
-  scale_colour_manual(name = "", values = colours_groups[1:4]) +
-  scale_linetype_manual(name = "", values = lines_group) +
-  labs(title = "Figure X. Sentiment per topic per media",
-       x = NULL,
-       y = "Sentiment score") +
-  theme_speciale
+# data_for_plot %>%
+#   filter(year > 2019) %>%
+#   filter(year < 2023) %>%
+#   ggplot(.,
+#          aes(x = year,
+#              y = index,
+#              colour = sub_group,
+#              linetype = sub_group)) +
+#   geom_point(size = 2.5) +
+#   geom_line(linewidth = 1.5) +
+#   geom_hline(yintercept = 0) +
+#   geom_hline(yintercept = 100) +
+#   facet_wrap(~topic_name,
+#              scales = "free"
+#   ) +
+#   scale_x_continuous(breaks = seq(2020, 2022, 1)) +
+#   scale_colour_manual(name = "", values = colours_groups[1:4]) +
+#   scale_linetype_manual(name = "", values = lines_group) +
+#   labs(title = "Figure X. Sentiment per topic per media",
+#        x = NULL,
+#        y = "Sentiment score") +
+#   theme_speciale
 
 
 # Correlations -----
@@ -262,35 +262,35 @@ data_for_plot %>%
   geom_smooth(aes(colour = sub_group, linetype = sub_group),
               se = FALSE, linewidth = 2, method = "lm", show.legend = FALSE) +
   # Arrow 1
-  geom_segment(data = data_for_plot %>% filter(sub_group == "Ndjoni Sango"),
-               aes(x = 10, y = -2, xend = 60, yend = -2),
+  geom_segment(data = data_for_plot %>% filter(sub_group == "Ndjoni Sango (RUS)"),
+               aes(x = 5, y = -2, xend = 60, yend = -2),
                linewidth = 0.7, colour = "black",
                arrow = arrow(length = unit(0.4, "cm"))) +
-  geom_text(data = data_for_plot %>% filter(sub_group == "Ndjoni Sango"),
-            aes(x = 35, y = -2.5, label = "More about MINUSCA, less about victims"),
-            family = theme_font, colour = "black", size = 5,
+  geom_text(data = data_for_plot %>% filter(sub_group == "Ndjoni Sango (RUS)"),
+            aes(x = 33, y = -2.5, label = "Less about victims, more MINUSCA"),
+            family = theme_font, colour = "black", size = 5.5,
   ) +
   # Arrow 2
-  geom_segment(data = data_for_plot %>% filter(sub_group == "Ndjoni Sango"),
-               aes(x = -87, y = -1.45, xend = -87, yend = 1.45),
+  geom_segment(data = data_for_plot %>% filter(sub_group == "Ndjoni Sango (RUS)"),
+               aes(x = -85, y = -1.43, xend = -85, yend = 1.47),
                linewidth = 0.7, colour = "black",
                arrow = arrow(length = unit(0.4, "cm"))) +
-  geom_text(data = data_for_plot %>% filter(sub_group == "Ndjoni Sango"),
+  geom_text(data = data_for_plot %>% filter(sub_group == "Ndjoni Sango (RUS)"),
             aes(x = -93, y = 0, label = "More positive"),
-            family = theme_font, colour = "black", size = 5,
+            family = theme_font, colour = "black", size = 5.5,
             angle = 90) +
   # Other
   facet_wrap(~sub_group#, scales = "free"
   ) +
   scale_colour_manual(name = "", values = colours_groups) +
   scale_linetype_manual(name = "", values = lines_group) +
-  labs(title = "Figure X. Russian media use more negative language to describe MINUSCA than victims",
-       subtitle = "Each point is a document. The sentiment is calculated for each document.\nThen the difference in proportion is calculated for two topics in each document.",
+  labs(title = "Figure 8. Russian media is negative in their framing of MINUSCA",
+       #subtitle = "Each point is a document. The sentiment is calculated for each document.\nThen the difference in proportion is calculated for two topics in each document.",
        x = "Topic proportion difference, percentage points",
        y = "Sentiment score") +
   theme_speciale
 
-save_plot_speciale("output/analysis_senti_cor_minusca_victims.png", height = 23, width = 30)
+save_plot_speciale("output/fig08_analysis_senti_cor_minusca_victims.png", height = 23, width = 33)
 
 
 

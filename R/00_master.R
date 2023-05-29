@@ -5,9 +5,10 @@ source("R/01_packages.R")
 
 source("R/01_utils.R")
 
-# Load and scrape data ----
-# source("R/01_load_raw_data.R", verbose = TRUE)
-# 
+# Load data ----
+source("R/01_load_raw_data.R", verbose = TRUE)
+
+# Scrape data ----
 # source("R/02_scrape_radio_ndeke.R")
 # 
 # source("R/02_scrape_radio_lengo.R")
@@ -16,8 +17,10 @@ source("R/01_utils.R")
 # 
 # source("R/02_scrape_radio_reseau.R")
 
-# Format data ----
-# source("R/03_format_covariates.R")
+# Format covariates ----
+source("R/03_format_covariates.R")
+
+# Format other -----
 # 
 # source("R/04_format_radio_and_digital.R")
 # 
@@ -38,6 +41,8 @@ source("R/15_analyse_stm.R")
 source("R/16_calculate_sentiment.R")
 
 source("R/17_analyse_sentiment.R")
+
+source("R/18_count_documents.R")
 
 
 

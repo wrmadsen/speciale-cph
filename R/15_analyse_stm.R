@@ -62,6 +62,13 @@ master_stm_theta <- master_stm_theta_raw %>%
 master_dt_thetas <- full_join(master_dt, master_stm_theta, by = "document") %>%
   tibble()
 
+## Change media names ----
+master_dt_thetas <- master_dt_thetas %>%
+  mutate(sub_group = case_match(sub_group,
+                                "Ndjoni Sango" ~ "Ndjoni Sango (RUS)",
+                                "Radio Lengo Songo" ~ "Radio Lengo Songo (RUS)",
+                                .default = sub_group))
+
 ## Check various documents per topic ----
 # Check difference between topics 18 and 7
 master_dt_thetas %>%
@@ -124,9 +131,13 @@ data_for_table <- master_dt_thetas_long %>%
 
 # Save
 data_for_table %>%
-    write.xlsx(., file = "output/appendix_examples_of_articles.xlsx")
-
-
+  arrange(desc(orient)) %>%
+  select(-orient) %>%
+  mutate(date = format(date, "%d %B %Y"),
+         across(c(4:ncol(.)), ~round(.) %>% paste0(" %"))) %>%
+  rename("Media" = sub_group, "Month" = date, "URL" = url) %>%
+  select(-URL) %>%
+  write.xlsx(., file = "output/table4_appendix_articles_contain_topics.xlsx")
 
 
 # Top topics -----
@@ -149,9 +160,10 @@ top_topics_no <- c("x16", "x5", "x19",
    left_join(., topic_labels, by = "topic_no") %>%
    arrange(-prop) %>%
    mutate(prop = prop*100,
-          prop = round(prop, 2)
+          prop = round(prop, 2),
+          prop = format(prop, nsmall = 2)
    ) %>%
-   transmute(topic_no = gsub("x", "", topic_no) %>% as.integer(),
+   transmute(topic_no = row_number() %>% as.integer(),
              topic_name,
              prop,
              frex))
@@ -159,7 +171,7 @@ top_topics_no <- c("x16", "x5", "x19",
 # Save as Excel
 table_of_topics %>%
   rename("No." = topic_no, "Topic" = topic_name, `Prop. (%)` = prop, "FREX" = frex) %>%
-  write.xlsx(., file = "output/analysis_stm_table_of_topics.xlsx")
+  write.xlsx(., file = "output/table3_analysis_stm_table_of_topics.xlsx")
 
 # Save flextable
 # table_of_topics %>%
@@ -196,13 +208,14 @@ data_for_plot_group %>%
   facet_wrap(~half, scales = "free") +
   scale_color_manual(name = "", values = colours_groups) +
   scale_shape_manual(name = "", values = points_group) +
-  labs(title = "Figure X. Total mean proportion for topics of the content by media outlets",
+  labs(title = "Figure 21. Total mean proportion for topics of the content\nper media",
        x = "Total mean proportion of content, %",
        y = NULL) +
   theme_speciale +
-  guides(colour = guide_legend(nrow = 2))
+  guides(colour = guide_legend(nrow = 2)) +
+  theme(plot.margin = margin(0, 1, 0, 0, "cm"))
 
-save_plot_speciale("output/analysis_stm_prop_mean_by_group.png",
+save_plot_speciale("output/fig21_analysis_stm_prop_mean_by_group.png",
                    height = 23, width = 30)
 
 ## Per orient ------
@@ -225,13 +238,13 @@ data_for_plot_orient %>%
   facet_wrap(~half, scales = "free_y") +
   scale_color_manual(name = "", values = colours_groups) +
   scale_shape_manual(name = "", values = points_group) +
-  labs(title = "Figure X. Total mean proportion for topics of the content by media outlets",
+  labs(title = "Figure 3. Total mean proportion for topics of the content by media",
        x = "Total mean proportion of content, %",
        y = NULL) +
   theme_speciale +
   guides(colour = guide_legend(nrow = 1))
 
-save_plot_speciale("output/analysis_stm_prop_mean_by_orient.png",
+save_plot_speciale("output/fig03_analysis_stm_prop_mean_by_orient.png",
                    height = 23, width = 30)
 
 ## Check numbers -----
@@ -280,14 +293,14 @@ data_for_plot %>%
   scale_colour_manual(name = "", values = colours_groups) +
   scale_linetype_manual(name = "", values = lines_group) +
   scale_x_date(labels = dateformat(), date_breaks = "16 months") +
-  labs(title = "Figure X. Mean proportion for topics of the monthly content by media outlets",
+  labs(title = "Figure 4. Mean proportion for topics of the monthly content by media outlets",
        #subtitle = "Index base is February 2022.",
        x = NULL,
        y = "Proportion of content, %") +
   theme_speciale +
   theme(panel.grid.major.x = element_blank())
 
-save_plot_speciale("output/analysis_stm_prop_mean_over_time.png", height = 23, width = 31)
+save_plot_speciale("output/fig04_analysis_stm_prop_mean_over_time.png", height = 23, width = 31)
 
 # Topic correlations ----
 ## Format and join ----
@@ -369,7 +382,7 @@ data_for_plot_life <- cor_lifetime %>%
          max_per_pair = max(cor)) %>%
   # Calculate mean of Russian pair
   # Then difference of this mean to the totot
-  mutate(mean_per_pair_russia = mean(cor[sub_group %in% c("Ndjoni Sango", "Radio Lengo Songo")]),
+  mutate(mean_per_pair_russia = mean(cor[sub_group %in% c("Ndjoni Sango (RUS)", "Radio Lengo Songo (RUS)")]),
          mean_per_pair_bench = mean(cor[sub_group %in% c("RJDH", "Radio Ndeke Luka")]),
          diff_russia_abs = (mean_per_pair_russia - mean_per_pair_bench) %>% abs()*100,
          diff_russia_rel_abs = ((mean_per_pair_russia - mean_per_pair_bench)/mean_per_pair_bench) %>% abs()*100
@@ -395,14 +408,14 @@ data_for_plot_life_top %>%
   scale_color_manual(name = "", values = colours_groups) +
   scale_shape_manual(name = "", values = points_group) +
   #scale_y_discrete(labels = wrap_format(20)) +
-  labs(title = "Figure X. Correlation of topic pairs",
+  labs(title = "Figure 5. Correlation of topic pairs",
        subtitle = NULL, #"Selection of pairs where Russian-supported media demonstrated largest difference",
        x = "Correlation statistic (Pearson)",
        y = NULL) +
   theme_speciale +
   guides(colour = guide_legend(nrow = 2))
 
-save_plot_speciale("output/analysis_stm_pairwise.png", height = 19)
+save_plot_speciale("output/fig05_analysis_stm_pairwise.png", height = 19)
 
 
 # Correlation numbers -----
@@ -427,21 +440,20 @@ data_for_plot_life %>%
 
 # Density
 data_for_plot_life %>%
+  select(diff_russia_rel_abs) %>%
   arrange(diff_russia_rel_abs) %>%
-  transmute(diff_russia_rel_abs = round(diff_russia_rel_abs, 0)) %>%
   ggplot(.,
          aes(x = diff_russia_rel_abs)) +
   #geom_bar() +
-  geom_density() +
+  geom_density(linewidth = 2) +
   #scale_x_continuous(trans = "log10") +
-  labs(title = "Figure X. Distribution of absolute relative difference in correlation of topic pairs",
-       subtitle = "Percentages have been rounded to nearest",
+  labs(title = "Figure 11. Distribution of absolute relative difference",
+       #subtitle = "Percentages have been rounded to nearest integer.",
        x = "Absolute relative difference in correlation, %",
        y = NULL) +
-  theme_speciale +
-  guides(colour = guide_legend(nrow = 2))
+  theme_speciale
 
-save_plot_speciale("output/appendix_stm_distribution_cor.png")
+save_plot_speciale("output/fig11_appendix_stm_distribution_cor.png")
 
 
 

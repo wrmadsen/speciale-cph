@@ -3,6 +3,12 @@
 # Data collection chapter ---
 
 ## Before pre-processing but after min. 100 characters  ----
+
+# Oldest and newest article
+
+
+
+
 # Number of words in total
 
 # Summary
