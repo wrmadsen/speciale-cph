@@ -154,10 +154,12 @@ data_for_plot %>%
   scale_linetype_manual(name = "", values = lines_group) +
   scale_x_continuous(breaks = seq(0, 100, 25), limits = c(0, 100)) +
   facet_wrap(~sub_group, scales = "free_y") +
-  labs(title = "Figure 10: Balance between a topic proportion and original documents",
+  labs(title = "Figure 10: Balance between topic proportion and original documents",
        y = "Share of original documents, %",
        x =  "Mean topic proportion, %") +
-  theme_speciale
+  theme_speciale +
+  theme(strip.text.x = element_text(size = 18, face = "bold"),
+        panel.background = element_rect(fill = NA, color = "black"))
 
 save_plot_speciale("output/fig10_appendix_select_topic_prop_for_sentiment.png")
 

@@ -298,7 +298,8 @@ data_for_plot %>%
        x = NULL,
        y = "Proportion of content, %") +
   theme_speciale +
-  theme(panel.grid.major.x = element_blank())
+  theme(panel.grid.major.x = element_blank()) +
+  guides(colour = guide_legend(nrow = 2))
 
 save_plot_speciale("output/fig04_analysis_stm_prop_mean_over_time.png", height = 23, width = 31)
 
@@ -408,14 +409,14 @@ data_for_plot_life_top %>%
   scale_color_manual(name = "", values = colours_groups) +
   scale_shape_manual(name = "", values = points_group) +
   #scale_y_discrete(labels = wrap_format(20)) +
-  labs(title = "Figure 5. Correlation of topic pairs",
+  labs(title = "Figure 5. Correlations between topics",
        subtitle = NULL, #"Selection of pairs where Russian-supported media demonstrated largest difference",
        x = "Correlation statistic (Pearson)",
        y = NULL) +
   theme_speciale +
   guides(colour = guide_legend(nrow = 2))
 
-save_plot_speciale("output/fig05_analysis_stm_pairwise.png", height = 19)
+save_plot_speciale("output/fig05_analysis_stm_pairwise.png", height = 19, width = 30)
 
 
 # Correlation numbers -----

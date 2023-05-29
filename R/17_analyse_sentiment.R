@@ -30,10 +30,11 @@ master_tokens_sentiment %>%
   #facet_wrap(~sub_group) +
   scale_colour_manual(name = "", values = colours_groups) +
   scale_linetype_manual(name = "", values = lines_group) +
-  labs(title = "Figure 12. Yearly variance of sentiment per media",
-       x = "Indexed using 2021 as the base year.",
-       y = NULL) +
-  theme_speciale
+  labs(title = "Figure 12. Indexed yearly variance of sentiment per media",
+       x = NULL,
+       y = "Indexed variance") +
+  theme_speciale +
+  guides(colour = guide_legend(nrow = 2))
 
 save_plot_speciale("output/fig12_appendix_senti_variance.png")
 
@@ -79,7 +80,8 @@ data_for_plot %>%
   labs(title = "Figure 13. Mean number of tokens used to calculate sentiment per document",
        x = NULL,
        y =  "Mean number of tokens") +
-  theme_speciale
+  theme_speciale +
+  guides(colour = guide_legend(nrow = 2))
 
 save_plot_speciale("output/fig13_appendix_senti_tokens_for_calculation.png")
 
@@ -137,7 +139,8 @@ data_for_plot %>%
        x = NULL,
        y =  "Mean sentiment per quarter") +
   theme_speciale +
-  theme(panel.grid.major.x = element_blank())
+  theme(panel.grid.major.x = element_blank()) +
+  guides(colour = guide_legend(nrow = 2))
 
 save_plot_speciale("output/fig06_analysis_senti_mean_per_quarter.png", height = 23, width = 30)
 
@@ -288,7 +291,9 @@ data_for_plot %>%
        #subtitle = "Each point is a document. The sentiment is calculated for each document.\nThen the difference in proportion is calculated for two topics in each document.",
        x = "Topic proportion difference, percentage points",
        y = "Sentiment score") +
-  theme_speciale
+  theme_speciale +
+  theme(strip.text.x = element_text(size = 18, face = "bold"),
+        panel.background = element_rect(fill = NA, color = "black"))
 
 save_plot_speciale("output/fig08_analysis_senti_cor_minusca_victims.png", height = 23, width = 33)
 

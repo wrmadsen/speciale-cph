@@ -17,9 +17,11 @@ forbes_raw %>%
   scale_colour_manual(name = "", values = c("Germany" = blued_speciale,
                                             "China" = orange_speciale,
                                             "Russia" = redd_speciale,
-                                            "USA" = blued_speciale,
+                                            "USA" = bluel2_speciale,
                                             "France" = gold_speciale)) +
-  scale_linetype_discrete(name = "") +
+  scale_linetype_manual(name = "", values = c("Russia" = "solid",
+                                              "China" = "dotted",
+                                              "USA" = "dashed")) +
   labs(title = "Figure 14. Total wealth of billionaires as a share of national income",
        x = NULL,
        y = "Share of national income, %") +
@@ -68,11 +70,12 @@ ggplot() +
   geom_sf(data = gadm_simp,
           fill = NA) +
   geom_sf(data = car_mines,
-          aes(colour = id),
-          size = 3) +
+          aes(colour = id,
+              shape = id),
+          size = 4) +
   # Point and label for Bangui
   geom_point(data = gadm_simp, aes(x = 18.5582, y = 4.3947),
-             colour = "black", shape = 21, size = 3)  +
+             colour = "black", size = 3)  +
   geom_text_repel(aes(x = 18.5582, y = 4.3947, label = "Bangui, the capital"),
                   family = theme_font,
                   size = 5.5,
@@ -83,6 +86,9 @@ ggplot() +
   scale_colour_manual(name = "", values = c("Gold" = gold_speciale,
                                             "Diamonds" = bluel_speciale,
                                             "Hydrocarbon" = brown_speciale)) +
+  scale_shape_manual(name = "", values = c("Gold" = 19,
+                                           "Diamonds" = 9,
+                                           "Hydrocarbon" = 17)) +
   labs(title = "Figure 16. Spatial distribution of mines in the CAR per 2017",
        subtitle = NULL,
        y = NULL,
@@ -126,12 +132,12 @@ acled %>%
          aes(x = month,
              y = n_roll)) +
   geom_point(aes(y = n), colour = blued_speciale, size = 3) +
-  geom_line(colour = blued_speciale, size = 2) +
+  geom_line(colour = blued_speciale, linewidth = 2) +
   #geom_vline(xintercept = specific_events$date) +
   theme_speciale +
   theme(panel.grid.major.x = element_blank()) +
   labs(title = "Figure 18. Number of conflicts per month in the CAR since 2019",
-       subtitle = "3-month rolling average.",
+       subtitle = "3-month rolling average. As of April 2023.",
        x = NULL,
        y = "Number per month")
 
@@ -140,7 +146,7 @@ save_plot_speciale("output/fig18_appendix_conflicts_per_month_total.png")
 # Plot Wagner's number of conflicts OVERALL
 acled %>%
   filter(actor1 == "Wagner Group" | actor2 == "Wagner Group") %>%
-  mutate(group = "Wagner Group") %>%
+  mutate(group = "Wagner Group (Russia)") %>%
   bind_rows(acled %>% mutate(group = "Total")) %>%
   group_by(group, month) %>%
   summarise(n = n()) %>%
@@ -150,14 +156,14 @@ acled %>%
          aes(x = month)) +
   geom_point(aes(y = n, colour = group)) +
   geom_line(aes(y = n_roll,
-                colour = group), size = 2) +
+                colour = group), linewidth = 2) +
   theme_speciale +
   theme(panel.grid.major.x = element_blank()) +
   scale_colour_manual(name = "",
                       values = c("Total" = blued_speciale,
-                                 "Wagner Group" = redd_speciale)) +
-  labs(title = "Figure 19. Number of conflicts per month associated with the Wagner Group in the CAR since 2010",
-       subtitle = "3-month rolling average.",
+                                 "Wagner Group (Russia)" = redd_speciale)) +
+  labs(title = "Figure 19. Number of conflicts per month associated with Russia in the CAR",
+       subtitle = "3-month rolling average. As of April 2023.",
        x = NULL,
        y = "Number per month")
 
@@ -193,7 +199,7 @@ ggplot() +
                   min.segment.length = 0.1) +
   # Theme
   labs(title = "Figure 20. Conflicts across CAR per year since 2019",
-       subtitle = "Each small dot shows the location of a single conflict event.",
+       subtitle = "Each dot shows the location of a conflict event. As of April 2023.",
        y = NULL,
        x = NULL) +
   theme_speciale +

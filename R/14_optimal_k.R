@@ -67,13 +67,14 @@ results_of_k_sub %>%
             linewidth = 2, alpha = 0.7, show.legend = FALSE) +
   geom_vline(xintercept = 20, linewidth = 1) +
   facet_wrap(~Metric, scales = "free_y") +
-  scale_colour_manual(name = "", values = c("Exclusivity" = redd_speciale, "Semantic coherence" = bluel_speciale)) +
+  scale_colour_manual(name = "",
+                      values = c("Exclusivity" = redd_speciale, "Semantic coherence" = blued_speciale)) +
   labs(title = "Figure 9. Exclusivity and semantic coherence for topic models",
        x = "K (the number of topics)",
        y = NULL) +
   theme_speciale
 
-save_plot_speciale("output/appendix_stm_exclusivity_semantic_coherence.png")
+save_plot_speciale("output/fig09_appendix_stm_exclusivity_semantic_coherence.png")
 
 
 
